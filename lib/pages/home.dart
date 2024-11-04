@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:truesight/pages/data_collection.dart';
 
 class HomePage extends StatefulWidget {
+  const HomePage({super.key});
+
   @override
   State<HomePage> createState() => _HomePageState();
 }
@@ -11,10 +13,10 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return  Scaffold(
         appBar: AppBar(
-          title: Text('Audio Logs'),
+          title: const Text('Audio Logs'),
         ),
         body: Padding(
-          padding: EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(16.0),
           child: Container(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -23,12 +25,8 @@ class _HomePageState extends State<HomePage> {
                 SizedBox(
                   height: 100,
                   child: TextButton(
-                    child: Text(
-                      "Hallucination Detection",
-                      style: TextStyle(fontSize: 30),
-                    ),
                     style: ButtonStyle(
-                      foregroundColor: MaterialStateProperty.all<Color>(
+                      foregroundColor: WidgetStateProperty.all<Color>(
                           const Color.fromARGB(255, 139, 194, 238)),
                     ),
                     onPressed: () {
@@ -38,34 +36,38 @@ class _HomePageState extends State<HomePage> {
                       ),
                     );
                   },
+                    child: Text(
+                      "Hallucination Detection",
+                      style: TextStyle(fontSize: 30),
+                    ),
                   ),
                 ),
                 SizedBox(
                   height: 100,
                   child: TextButton(
+                    style: ButtonStyle(
+                      foregroundColor: WidgetStateProperty.all<Color>(
+                          const Color.fromARGB(255, 203, 177, 247)),
+                    ),
+                    onPressed: () {},
                     child: Text(
                       "Positive Affirmations",
                       style: TextStyle(fontSize: 30),
                     ),
-                    style: ButtonStyle(
-                      foregroundColor: MaterialStateProperty.all<Color>(
-                          const Color.fromARGB(255, 203, 177, 247)),
-                    ),
-                    onPressed: () {},
                   ),
                 ),
                 SizedBox(
                   height: 100,
                   child: TextButton(
+                    style: ButtonStyle(
+                      foregroundColor: WidgetStateProperty.all<Color>(
+                          const Color.fromARGB(255, 203, 177, 247)),
+                    ),
+                    onPressed: () {},
                     child: Text(
                       "Schizoprenia Diagnostics",
                       style: TextStyle(fontSize: 30),
                     ),
-                    style: ButtonStyle(
-                      foregroundColor: MaterialStateProperty.all<Color>(
-                          const Color.fromARGB(255, 203, 177, 247)),
-                    ),
-                    onPressed: () {},
                   ),
                 )
               ],
