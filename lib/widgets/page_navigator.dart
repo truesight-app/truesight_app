@@ -1,27 +1,47 @@
 import 'package:flutter/material.dart';
 
-class PageNavigatorController {
+class PageNavigatorController extends ChangeNotifier {
   void Function() nextPage;
   void Function() previousPage;
+  int currentPage;
+  bool canProceed;
+  final PageController pageController;
 
   PageNavigatorController({
     required this.nextPage,
     required this.previousPage,
+    required this.currentPage,
+    required this.canProceed,
+    required this.pageController,
   });
+
+  void toggleCanProceed(bool value) {
+    canProceed = value;
+    notifyListeners();
+  }
+
+  void update({
+    required void Function() nextPage,
+    required void Function() previousPage,
+    required int currentPage,
+    required bool canProceed,
+  }) {
+    this.nextPage = nextPage;
+    this.previousPage = previousPage;
+    this.currentPage = currentPage;
+    this.canProceed = canProceed;
+    notifyListeners();
+  }
 }
 
 class PageNavigator extends StatelessWidget {
-  final PageController pageController;
-  int currentPage;
-  bool canProceed;
+
   PageNavigatorController pageNavigatorController;
 
   PageNavigator({
     super.key,
-    required this.pageController,
     required this.pageNavigatorController,
-    required this.currentPage,
-    required this.canProceed,
+  
   });
 
   @override
@@ -36,7 +56,7 @@ class PageNavigator extends StatelessWidget {
             child: const Text('Back'),
           ),
           ElevatedButton(
-            onPressed: canProceed ? pageNavigatorController.nextPage : null,
+            onPressed: pageNavigatorController.canProceed ? pageNavigatorController.nextPage : null,
             child: const Text('Next'),
           ),
         ],

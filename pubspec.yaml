@@ -7,8 +7,11 @@ environment:
   sdk: ^3.5.3
 
 dependencies:
+  audio_waveforms: ^1.1.1
   flutter:
     sdk: flutter
+  path_provider: ^2.1.5
+  record: ^5.2.0
   speech_to_text: ^7.0.0
 
 dev_dependencies:

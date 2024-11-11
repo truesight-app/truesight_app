@@ -21,20 +21,21 @@ class _DataCollectionState extends State<DataCollection> {
   void initState() {
     // execute this function when the page is loaded
     super.initState();
-    pageNavigatorController =  PageNavigatorController(
-                nextPage: () {
-                 _pageController.nextPage(
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.easeIn,                 );
-                },
-                previousPage: ()  {
-                  _pageController.previousPage(
-                    duration: const Duration(milliseconds: 300),
-                    curve: Curves.easeIn);
-                    
-                }
-                
-              );
+    pageNavigatorController = PageNavigatorController(
+        canProceed: canProceed,
+        currentPage: currentPage,
+        pageController: _pageController,
+        nextPage: () {
+          _pageController.nextPage(
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeIn,
+          );
+        },
+        previousPage: () {
+          _pageController.previousPage(
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeIn);
+        });
   }
 
   @override
@@ -56,11 +57,11 @@ class _DataCollectionState extends State<DataCollection> {
           onChanged: (value) {
             if (value.split(' ').length >= 10) {
               setState(() {
-                canProceed = true;
+                pageNavigatorController.toggleCanProceed(true);
               });
             } else {
               setState(() {
-                canProceed = false;
+                pageNavigatorController.toggleCanProceed(false);
               });
             }
           },
@@ -101,11 +102,6 @@ class _DataCollectionState extends State<DataCollection> {
             right: 20,
             child: PageNavigator(
               pageNavigatorController: pageNavigatorController,
-              pageController: _pageController,
-              currentPage: _pageController.hasClients
-                  ? _pageController.page!.toInt()
-                  : 0,
-              canProceed: canProceed,
             ),
           ),
         ],
