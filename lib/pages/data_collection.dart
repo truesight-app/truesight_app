@@ -13,34 +13,45 @@ class _DataCollectionState extends State<DataCollection> {
   late final PageController _pageController = PageController();
   final TextEditingController _descriptionController = TextEditingController();
   late PageNavigatorController pageNavigatorController;
-
   int currentPage = 0;
-  bool canProceed = false;
 
   @override
   void initState() {
-    // execute this function when the page is loaded
     super.initState();
     pageNavigatorController = PageNavigatorController(
-        canProceed: canProceed,
-        currentPage: currentPage,
-        pageController: _pageController,
-        nextPage: () {
-          _pageController.nextPage(
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeIn,
-          );
-        },
-        previousPage: () {
-          _pageController.previousPage(
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeIn);
-        });
+      canProceed: false,
+      currentPage: currentPage,
+      pageController: _pageController,
+      nextPage: () {
+        _pageController.nextPage(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeIn,
+        );
+      },
+      previousPage: () {
+        _pageController.previousPage(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeIn,
+        );
+      },
+    );
+
+    // Listen to text changes
+    _descriptionController.addListener(_checkWordCount);
+  }
+
+  void _checkWordCount() {
+    final text = _descriptionController.text;
+    final wordCount = text
+        .trim()
+        .split(RegExp(r'\s+'))
+        .where((word) => word.isNotEmpty)
+        .length;
+    pageNavigatorController.toggleCanProceed(wordCount >= 15);
   }
 
   @override
   void dispose() {
-    // free up memory when we leave this page
     _pageController.dispose();
     _descriptionController.dispose();
     super.dispose();
@@ -49,25 +60,16 @@ class _DataCollectionState extends State<DataCollection> {
   Widget buildAudioDescription() {
     return Column(
       children: [
-        const Text("Give a brief description on what you are hearing.",
-            style: TextStyle(fontSize: 26)),
+        const Text(
+          "Give a brief description on what you are hearing.",
+          style: TextStyle(fontSize: 26),
+        ),
         const SizedBox(height: 20),
         TextField(
           maxLines: 5,
-          onChanged: (value) {
-            if (value.split(' ').length >= 10) {
-              setState(() {
-                pageNavigatorController.toggleCanProceed(true);
-              });
-            } else {
-              setState(() {
-                pageNavigatorController.toggleCanProceed(false);
-              });
-            }
-          },
           controller: _descriptionController,
           decoration: const InputDecoration(
-            hintText: 'Description',
+            hintText: 'Description (minimum 15 words)',
             border: OutlineInputBorder(),
           ),
         ),
@@ -79,13 +81,20 @@ class _DataCollectionState extends State<DataCollection> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(),
-      body: Container(
-          child: Stack(
+      body: Stack(
         children: [
           Padding(
             padding: const EdgeInsets.all(20),
             child: PageView(
               controller: _pageController,
+              physics: const NeverScrollableScrollPhysics(), // Prevent swiping
+              onPageChanged: (page) {
+                setState(() {
+                  currentPage = page;
+                  // Reset canProceed for new page
+                  pageNavigatorController.toggleCanProceed(false);
+                });
+              },
               children: [
                 buildAudioDescription(),
                 RecordingPage(navigatorController: pageNavigatorController),
@@ -105,15 +114,7 @@ class _DataCollectionState extends State<DataCollection> {
             ),
           ),
         ],
-      )),
+      ),
     );
   }
-}
-
-int clamp(int value, int min, int max) {
-  return value < min
-      ? min
-      : value > max
-          ? max
-          : value;
 }
