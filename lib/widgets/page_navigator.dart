@@ -35,32 +35,37 @@ class PageNavigatorController extends ChangeNotifier {
 }
 
 class PageNavigator extends StatelessWidget {
+  final PageNavigatorController pageNavigatorController;
 
-  PageNavigatorController pageNavigatorController;
-
-  PageNavigator({
+  const PageNavigator({
     super.key,
     required this.pageNavigatorController,
-  
   });
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          ElevatedButton(
-            onPressed: pageNavigatorController.previousPage,
-            child: const Text('Back'),
+    return ListenableBuilder(
+      listenable: pageNavigatorController,
+      builder: (context, _) {
+        return Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              ElevatedButton(
+                onPressed: pageNavigatorController.previousPage,
+                child: const Text('Back'),
+              ),
+              ElevatedButton(
+                onPressed: pageNavigatorController.canProceed
+                    ? pageNavigatorController.nextPage
+                    : null,
+                child: const Text('Next'),
+              ),
+            ],
           ),
-          ElevatedButton(
-            onPressed: pageNavigatorController.canProceed ? pageNavigatorController.nextPage : null,
-            child: const Text('Next'),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
