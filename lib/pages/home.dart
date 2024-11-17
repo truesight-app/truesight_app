@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:truesight/pages/data_collection.dart';
+import 'package:truesight/pages/positive_affs.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -49,7 +50,13 @@ class _HomePageState extends State<HomePage> {
                       foregroundColor: WidgetStateProperty.all<Color>(
                           const Color.fromARGB(255, 203, 177, 247)),
                     ),
-                    onPressed: () {},
+                    onPressed: () {
+                      Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => const PositiveAffs(),
+                      ),
+                    );
+                    },
                     child: Text(
                       "Positive Affirmations",
                       style: TextStyle(fontSize: 30),
