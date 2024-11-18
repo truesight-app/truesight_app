@@ -1,19 +1,23 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:truesight/pages/components/processing_page.dart';
+import 'package:truesight/providers/recordingProvider.dart';
 import 'package:truesight/widgets/page_navigator.dart';
 import 'package:audio_waveforms/audio_waveforms.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:truesight/main.dart';
 
-class RecordingPage extends StatefulWidget {
+class RecordingPage extends ConsumerStatefulWidget {
   const RecordingPage({super.key, required this.navigatorController});
   final PageNavigatorController navigatorController;
 
   @override
-  State<RecordingPage> createState() => _RecordingPageState();
+  ConsumerState<RecordingPage> createState() => _RecordingPageState();
 }
 
-class _RecordingPageState extends State<RecordingPage> {
+class _RecordingPageState extends ConsumerState<RecordingPage> {
   bool isRecording = false;
   bool isPlaying = false;
   bool hasRecording = false;
@@ -28,6 +32,8 @@ class _RecordingPageState extends State<RecordingPage> {
   @override
   void initState() {
     super.initState();
+    // delete old recording in temp
+    hasRecording = false;
     widget.navigatorController.canProceed = false;
     _initializeControllers();
   }
@@ -48,7 +54,7 @@ class _RecordingPageState extends State<RecordingPage> {
 
   Future<void> _initializeRecording() async {
     try {
-      final dir = await getApplicationDocumentsDirectory();
+      final dir = await getTemporaryDirectory();
       recordingPath = '${dir.path}/recording.m4a';
 
       if (File(recordingPath).existsSync()) {
@@ -92,7 +98,7 @@ class _RecordingPageState extends State<RecordingPage> {
       if (hasRecording) {
         await playerController.stopPlayer();
         isPlaying = false;
-      }
+      } 
 
       await recorderController.record(path: recordingPath);
       _startTimer();
@@ -113,6 +119,7 @@ class _RecordingPageState extends State<RecordingPage> {
   Future<void> _stopRecording() async {
     try {
       recordingTimer?.cancel();
+      widget.navigatorController.toggleCanProceed(true);
 
       if (isRecording) {
         final wasRecording = await recorderController.stop().then((_) => true);
@@ -140,6 +147,18 @@ class _RecordingPageState extends State<RecordingPage> {
         setState(() {
           isRecording = false;
           // Consider setting hasRecording based on whether the file exists
+          ref.read(recordingProvider.notifier).setFilePath(recordingPath);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Recording saved!'),
+              duration: Duration(seconds: 2),
+            ),
+          );
+
+          widget.navigatorController.toggleCanProceed(true);
+          setState(() {
+            hasRecording = true;
+          });
         });
       }
       // Consider showing an error message to the user
@@ -300,6 +319,8 @@ class _RecordingPageState extends State<RecordingPage> {
 
           const SizedBox(height: 32),
 
+
+
           // Record button
           if (!hasRecording || isRecording)
             Container(
@@ -318,7 +339,21 @@ class _RecordingPageState extends State<RecordingPage> {
               ),
               child: IconButton(
                 iconSize: 48.0,
-                onPressed: isRecording ? _stopRecording : _startRecording,
+                onPressed: isRecording
+                    ? () async {
+                        await ref
+                            .read(recordingProvider.notifier)
+                            .setFilePath(recordingPath);
+                        _stopRecording();
+
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Recording saved!'),
+                            duration: Duration(seconds: 2),
+                          ),
+                        );
+                      }
+                    : _startRecording,
                 icon: Icon(
                   isRecording ? Icons.stop : Icons.mic,
                   color: Colors.red,

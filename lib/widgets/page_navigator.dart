@@ -4,6 +4,7 @@ class PageNavigatorController extends ChangeNotifier {
   void Function() nextPage;
   void Function() previousPage;
   int currentPage;
+  int numPages;
   bool canProceed;
   final PageController pageController;
 
@@ -13,6 +14,7 @@ class PageNavigatorController extends ChangeNotifier {
     required this.currentPage,
     required this.canProceed,
     required this.pageController,
+    required this.numPages,
   });
 
   void toggleCanProceed(bool value) {
@@ -56,12 +58,13 @@ class PageNavigator extends StatelessWidget {
                 onPressed: pageNavigatorController.previousPage,
                 child: const Text('Back'),
               ),
-              ElevatedButton(
-                onPressed: pageNavigatorController.canProceed
-                    ? pageNavigatorController.nextPage
-                    : null,
-                child: const Text('Next'),
-              ),
+              if (pageNavigatorController.currentPage < pageNavigatorController.numPages - 1)
+                ElevatedButton(
+                  onPressed: pageNavigatorController.canProceed
+                      ? pageNavigatorController.nextPage
+                      : null,
+                  child: const Text('Next'),
+                ),
             ],
           ),
         );

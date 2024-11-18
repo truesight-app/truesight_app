@@ -26,6 +26,7 @@ class _PositiveAffsState extends State<PositiveAffs> {
         canProceed: canProceed,
         currentPage: currentPage,
         pageController: _pageController,
+        numPages: 1,
         nextPage: () {
           _pageController.nextPage(
             duration: const Duration(milliseconds: 300),

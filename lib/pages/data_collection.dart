@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:truesight/pages/components/processing_page.dart';
 import 'package:truesight/pages/components/recording_page.dart';
 import 'package:truesight/widgets/page_navigator.dart';
 
@@ -22,17 +23,27 @@ class _DataCollectionState extends State<DataCollection> {
       canProceed: false,
       currentPage: currentPage,
       pageController: _pageController,
+      numPages: 2,
       nextPage: () {
+
         _pageController.nextPage(
           duration: const Duration(milliseconds: 300),
           curve: Curves.easeIn,
         );
+
+        setState(() {
+          currentPage = 1;
+        });
       },
       previousPage: () {
         _pageController.previousPage(
           duration: const Duration(milliseconds: 300),
           curve: Curves.easeIn,
         );
+
+        setState(() {
+          currentPage = 0;
+        });
       },
     );
 
@@ -98,10 +109,8 @@ class _DataCollectionState extends State<DataCollection> {
               children: [
                 buildAudioDescription(),
                 RecordingPage(navigatorController: pageNavigatorController),
-                Container(
-                  color: Colors.red,
-                  child: const Center(child: Text('Page 3')),
-                ),
+                ProcessingPage(),
+  
               ],
             ),
           ),
