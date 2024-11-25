@@ -19,5 +19,7 @@ class RecordingProvider extends StateNotifier<RecordingState> {
     final path = '${directory.path}/$recordingName';
     state = state.copyWith(filePath: path);
   }
+
+  get filePath => state.filePath;
 }
 final recordingProvider = StateNotifierProvider((ref) => RecordingProvider());

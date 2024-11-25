@@ -86,9 +86,6 @@ class _PositiveAffsState extends State<PositiveAffs> {
     // TODO: implement build
     throw UnimplementedError();
   }
-
-  
-  
 }
 
 int clamp(int value, int min, int max) {

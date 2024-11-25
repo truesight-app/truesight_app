@@ -14,11 +14,16 @@ dependencies:
   path_provider: ^2.1.5
   record: ^5.2.0
   speech_to_text: ^7.0.0
+  tflite_flutter: ^0.11.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^4.0.0
+
+assets:
+  - assets/yam.tflite
+  - assets/classes.csv
 
 flutter:
   uses-material-design: true
