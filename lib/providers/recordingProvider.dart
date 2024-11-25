@@ -20,6 +20,13 @@ class RecordingProvider extends StateNotifier<RecordingState> {
     state = state.copyWith(filePath: path);
   }
 
+  Future<void> init() async {
+    final directory = await getTemporaryDirectory();
+    final path = '${directory.path}/recording.m4a';
+    state = state.copyWith(filePath: path);
+  }
+
   get filePath => state.filePath;
 }
+
 final recordingProvider = StateNotifierProvider((ref) => RecordingProvider());

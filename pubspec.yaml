@@ -1,6 +1,6 @@
 name: truesight
 description: "A new Flutter project."
-publish_to: 'none'
+publish_to: "none"
 version: 0.1.0
 
 environment:
@@ -21,9 +21,9 @@ dev_dependencies:
     sdk: flutter
   flutter_lints: ^4.0.0
 
-assets:
-  - assets/yam.tflite
-  - assets/classes.csv
-
 flutter:
   uses-material-design: true
+
+  assets:
+    - assets/yam.tflite
+    - assets/labels.txt

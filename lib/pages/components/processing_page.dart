@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:tflite_flutter/tflite_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:truesight/providers/recordingProvider.dart';
@@ -14,22 +15,73 @@ class ProcessingPage extends ConsumerStatefulWidget {
 class _ProcessingPageState extends ConsumerState<ProcessingPage> {
   bool isProcessing = false;
 
+  int argmax(List<double> list) {
+    var largest = 0;
+    for (var i = 1; i < list.length; i++) {
+      if (list[i] > list[largest]) {
+        largest = i;
+      }
+    }
+    return largest;
+  }
+
   Future<void> getPrediction() async {
+    Map<int, String> labels = {};
+    var file = await rootBundle.loadString('assets/labels.txt');
+    var lines = file.split('\n');
+    for (var line in lines) {
+      // skip first line
+      if (line == lines[0]) {
+        continue;
+      }
+      var parts = line.split(' ');
+      var idx = parts[0];
+      var prediction = parts[1];
+
+      labels[int.parse(idx)] = prediction;
+    }
+
     final interpreter = await Interpreter.fromAsset('assets/yam.tflite');
     PlayerController playerController = PlayerController();
-    var samples = await playerController.extractWaveformData(path: ref.read(recordingProvider.notifier).filePath);
+
+    var samples = await playerController.extractWaveformData(
+        path: ref.read(recordingProvider.notifier).filePath);
     // normalize to -1 to 1
     samples = samples.map((e) => e / 32768.0).toList();
 
+    print(samples.length);
     // Convert stereo to mono by averaging channels if necessary
     if (samples.length > 1) {
       samples = [samples.reduce((a, b) => a + b) / samples.length];
     }
 
     print(samples.length);
-  }
 
-  
+    // Ensure the length matches the model's expected input
+    if (samples.length > 16000) {
+      samples = samples.sublist(0, 16000); // Truncate
+    } else if (samples.length < 16000) {
+      samples = List.from(samples)
+        ..addAll(List.filled(16000 - samples.length, 0)); // Pad
+    }
+
+    // Ensure correct shape and data type
+    var input = samples.map((e) => [e]).toList();
+    var inputShape = interpreter.getInputTensor(0).shape;
+    var inputType = interpreter.getInputTensor(0).type;
+    var outputType = interpreter.getOutputTensor(0).type;
+    var outputShape = interpreter.getOutputTensor(0).shape;
+    var output =
+        List.generate(outputShape[0], (_) => List.filled(outputShape[1], 0.0));
+
+    interpreter.allocateTensors();
+    interpreter.run(input, output);
+
+    var prediction = argmax(output[0]);
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text('Prediction: ${labels[prediction]}'),
+    ));
+  }
 
   @override
   Widget build(BuildContext context) {
