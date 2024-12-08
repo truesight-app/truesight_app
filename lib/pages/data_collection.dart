@@ -25,7 +25,6 @@ class _DataCollectionState extends State<DataCollection> {
       pageController: _pageController,
       numPages: 2,
       nextPage: () {
-
         _pageController.nextPage(
           duration: const Duration(milliseconds: 300),
           curve: Curves.easeIn,
@@ -110,7 +109,6 @@ class _DataCollectionState extends State<DataCollection> {
                 buildAudioDescription(),
                 RecordingPage(navigatorController: pageNavigatorController),
                 ProcessingPage(),
-  
               ],
             ),
           ),

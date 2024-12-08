@@ -51,20 +51,44 @@ class PageNavigator extends StatelessWidget {
       builder: (context, _) {
         return Padding(
           padding: const EdgeInsets.all(8.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          child: Column(
             children: [
-              ElevatedButton(
-                onPressed: pageNavigatorController.previousPage,
-                child: const Text('Back'),
-              ),
-              if (pageNavigatorController.currentPage < pageNavigatorController.numPages - 1)
-                ElevatedButton(
-                  onPressed: pageNavigatorController.canProceed
-                      ? pageNavigatorController.nextPage
-                      : null,
-                  child: const Text('Next'),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(
+                  pageNavigatorController.numPages,
+                  (index) => Icon(
+                    Icons.circle,
+                    size: 8.0,
+                    color: index == pageNavigatorController.currentPage
+                        ? Colors.blue
+                        : Colors.grey,
+                  ),
                 ),
+              ),
+              const SizedBox(height: 8.0),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  ElevatedButton(
+                    onPressed: pageNavigatorController.previousPage,
+                    child: const Text('Back'),
+                  ),
+                  if (pageNavigatorController.currentPage <
+                      pageNavigatorController.numPages - 1)
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: pageNavigatorController.canProceed
+                            ? pageNavigatorController.nextPage
+                            : null,
+                        child: const Text('Continue'),
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16.0),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
             ],
           ),
         );

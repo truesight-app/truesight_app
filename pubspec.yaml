@@ -8,9 +8,11 @@ environment:
 
 dependencies:
   audio_waveforms: ^1.1.1
+  ffmpeg_kit_flutter: ^6.0.3
   flutter:
     sdk: flutter
   flutter_riverpod: ^2.6.1
+  intl: ^0.20.1
   path_provider: ^2.1.5
   record: ^5.2.0
   speech_to_text: ^7.0.0

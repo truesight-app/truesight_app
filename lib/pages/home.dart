@@ -12,90 +12,59 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
-    return  Scaffold(
-        appBar: AppBar(
-          title: const Text('Audio Logs'),
-        ),
-        body: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Container(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                SizedBox(
-                  height: 100,
-                  child: TextButton(
-                    style: ButtonStyle(
-                      foregroundColor: WidgetStateProperty.all<Color>(
-                          const Color.fromARGB(255, 139, 194, 238)),
-                    ),
-                    onPressed: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => const DataCollection(),
-                      ),
-                    );
-                  },
-                    child: Text(
-                      "Hallucination Detection",
-                      style: TextStyle(fontSize: 30),
-                    ),
-                  ),
-                ),
-                SizedBox(
-                  height: 100,
-                  child: TextButton(
-                    style: ButtonStyle(
-                      foregroundColor: WidgetStateProperty.all<Color>(
-                          const Color.fromARGB(255, 203, 177, 247)),
-                    ),
-                    onPressed: () {
-                      Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => const PositiveAffs(),
-                      ),
-                    );
-                    },
-                    child: Text(
-                      "Positive Affirmations",
-                      style: TextStyle(fontSize: 30),
-                    ),
-                  ),
-                ),
-                SizedBox(
-                  height: 100,
-                  child: TextButton(
-                    style: ButtonStyle(
-                      foregroundColor: WidgetStateProperty.all<Color>(
-                          const Color.fromARGB(255, 203, 177, 247)),
-                    ),
-                    onPressed: () {},
-                    child: Text(
-                      "Schizoprenia Diagnostics",
-                      style: TextStyle(fontSize: 30),
-                    ),
-                  ),
-                )
-              ],
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Dashboard'),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: GridView.count(
+          crossAxisCount: 2,
+          crossAxisSpacing: 16.0,
+          mainAxisSpacing: 16.0,
+          children: [
+            _buildDashboardButton(
+              context,
+              "Hallucination Detection",
+              const Color.fromARGB(255, 139, 194, 238),
+              const DataCollection(),
             ),
-          ),
-
-          // bottomNavigationBar: BottomNavigationBar(items: [
-          //   BottomNavigationBarItem(
-          //     icon: Icon(Icons.home),
-          //     label: 'Home',
-          //   ),
-          //   BottomNavigationBarItem(
-          //     icon: Icon(Icons.home),
-          //     label: 'Bookmarks',
-          //   ),
-          //   BottomNavigationBarItem(
-          //     icon: Icon(Icons.check),
-          //     label: 'Home',
-          //   )
-          // ]),
+            _buildDashboardButton(
+              context,
+              "Positive Affirmations",
+              const Color.fromARGB(255, 203, 177, 247),
+              const PositiveAffs(),
+            ),
+            _buildDashboardButton(
+              context,
+              "Schizophrenia Diagnostics",
+              const Color.fromARGB(255, 203, 177, 247),
+              null,
+            ),
+          ],
         ),
-      );
+      ),
+    );
+  }
+
+  Widget _buildDashboardButton(
+      BuildContext context, String title, Color color, Widget? page) {
+    return ElevatedButton(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: color,
+        padding: const EdgeInsets.all(16.0),
+        textStyle: const TextStyle(fontSize: 20),
+      ),
+      onPressed: page != null
+          ? () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => page,
+                ),
+              );
+            }
+          : null,
+      child: Text(title, textAlign: TextAlign.center),
+    );
   }
 }

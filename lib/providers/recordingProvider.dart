@@ -14,9 +14,7 @@ class RecordingState {
 class RecordingProvider extends StateNotifier<RecordingState> {
   RecordingProvider() : super(RecordingState(filePath: ''));
 
-  Future<void> setFilePath(String recordingName) async {
-    final directory = await getTemporaryDirectory();
-    final path = '${directory.path}/$recordingName';
+  Future<void> setFilePath(String path) async {
     state = state.copyWith(filePath: path);
   }
 

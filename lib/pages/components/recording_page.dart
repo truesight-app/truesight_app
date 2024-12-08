@@ -32,7 +32,6 @@ class _RecordingPageState extends ConsumerState<RecordingPage> {
   @override
   void initState() {
     super.initState();
-    // delete old recording in temp
     hasRecording = false;
     widget.navigatorController.canProceed = false;
     _initializeControllers();
@@ -48,7 +47,6 @@ class _RecordingPageState extends ConsumerState<RecordingPage> {
       });
     } catch (e) {
       print('Error initializing controllers: $e');
-      // Handle initialization error - maybe show a dialog to user
     }
   }
 
@@ -57,15 +55,14 @@ class _RecordingPageState extends ConsumerState<RecordingPage> {
       final dir = await getTemporaryDirectory();
       recordingPath = '${dir.path}/recording.m4a';
 
+      // Delete existing recording file
       if (File(recordingPath).existsSync()) {
-        await playerController.preparePlayer(
-          path: recordingPath,
-          noOfSamples: 100,
-        );
-        setState(() {
-          hasRecording = true;
-        });
+        await File(recordingPath).delete();
       }
+
+      setState(() {
+        hasRecording = false;
+      });
     } catch (e) {
       print('Error initializing recording: $e');
       rethrow;
@@ -94,11 +91,18 @@ class _RecordingPageState extends ConsumerState<RecordingPage> {
         return;
       }
 
-      // Reset player if there was a previous recording
-      if (hasRecording) {
+      // Stop playback if it's playing
+      if (isPlaying) {
         await playerController.stopPlayer();
-        isPlaying = false;
-      } 
+        setState(() {
+          isPlaying = false;
+        });
+      }
+
+      // Delete existing recording if any
+      if (File(recordingPath).existsSync()) {
+        await File(recordingPath).delete();
+      }
 
       await recorderController.record(path: recordingPath);
       _startTimer();
@@ -112,20 +116,19 @@ class _RecordingPageState extends ConsumerState<RecordingPage> {
       setState(() {
         isRecording = false;
       });
-      // Consider showing an error message to the user
     }
   }
 
   Future<void> _stopRecording() async {
     try {
       recordingTimer?.cancel();
-      widget.navigatorController.toggleCanProceed(true);
 
       if (isRecording) {
-        final wasRecording = await recorderController.stop().then((_) => true);
-        if (wasRecording) {
-          await Future.delayed(const Duration(
-              milliseconds: 200)); // Small delay to ensure file is written
+        await recorderController.stop();
+        // Add a small delay to ensure file is written
+        await Future.delayed(const Duration(milliseconds: 200));
+
+        if (File(recordingPath).existsSync()) {
           await playerController.preparePlayer(
             path: recordingPath,
             noOfSamples: 100,
@@ -139,14 +142,7 @@ class _RecordingPageState extends ConsumerState<RecordingPage> {
               widget.navigatorController.canProceed = true;
             });
           }
-        }
-      }
-    } catch (e) {
-      print('Error stopping recording: $e');
-      if (mounted) {
-        setState(() {
-          isRecording = false;
-          // Consider setting hasRecording based on whether the file exists
+
           ref.read(recordingProvider.notifier).setFilePath(recordingPath);
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -154,14 +150,13 @@ class _RecordingPageState extends ConsumerState<RecordingPage> {
               duration: Duration(seconds: 2),
             ),
           );
-
-          widget.navigatorController.toggleCanProceed(true);
-          setState(() {
-            hasRecording = true;
-          });
-        });
+        }
       }
-      // Consider showing an error message to the user
+    } catch (e) {
+      print('Error stopping recording: $e');
+      setState(() {
+        isRecording = false;
+      });
     }
   }
 
@@ -169,24 +164,35 @@ class _RecordingPageState extends ConsumerState<RecordingPage> {
     if (!hasRecording) return;
 
     try {
-      if (playerController.playerState.isStopped ||
-          playerController.playerState.isPaused) {
+      if (isPlaying) {
         await playerController.pausePlayer();
-      } else {
-        await playerController.startPlayer();
-      }
-      if (mounted) {
         setState(() {
-          isPlaying = !isPlaying;
+          isPlaying = false;
+        });
+      } else {
+        if (playerController.playerState.isStopped) {
+          await playerController.startPlayer(finishMode: FinishMode.stop);
+        } else {
+          await playerController.startPlayer();
+        }
+        setState(() {
+          isPlaying = true;
+        });
+
+        // Listen for playback completion
+        playerController.onCompletion.listen((_) {
+          if (mounted) {
+            setState(() {
+              isPlaying = false;
+            });
+          }
         });
       }
     } catch (e) {
       print('Error toggling playback: $e');
-      if (mounted) {
-        setState(() {
-          isPlaying = false;
-        });
-      }
+      setState(() {
+        isPlaying = false;
+      });
     }
   }
 
@@ -319,8 +325,6 @@ class _RecordingPageState extends ConsumerState<RecordingPage> {
 
           const SizedBox(height: 32),
 
-
-
           // Record button
           if (!hasRecording || isRecording)
             Container(
@@ -350,6 +354,13 @@ class _RecordingPageState extends ConsumerState<RecordingPage> {
                           const SnackBar(
                             content: Text('Recording saved!'),
                             duration: Duration(seconds: 2),
+                          ),
+                        );
+
+                        // Navigate to processing page
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => const ProcessingPage(),
                           ),
                         );
                       }
