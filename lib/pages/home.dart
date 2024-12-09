@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:truesight/pages/data_collection.dart';
 import 'package:truesight/pages/positive_affs.dart';
+// import 'package:google_fonts/google_fonts.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -18,10 +19,8 @@ class _HomePageState extends State<HomePage> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: GridView.count(
-          crossAxisCount: 2,
-          crossAxisSpacing: 16.0,
-          mainAxisSpacing: 16.0,
+        child: ListView(
+          
           children: [
             _buildDashboardButton(
               context,
@@ -38,7 +37,7 @@ class _HomePageState extends State<HomePage> {
             _buildDashboardButton(
               context,
               "Schizophrenia Diagnostics",
-              const Color.fromARGB(255, 203, 177, 247),
+              const Color.fromARGB(255, 199, 174, 238),
               null,
             ),
           ],
@@ -49,7 +48,9 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildDashboardButton(
       BuildContext context, String title, Color color, Widget? page) {
-    return ElevatedButton(
+    return Padding(
+      padding: EdgeInsets.all(8.0),
+      child: ElevatedButton(
       style: ElevatedButton.styleFrom(
         backgroundColor: color,
         padding: const EdgeInsets.all(16.0),
@@ -65,6 +66,6 @@ class _HomePageState extends State<HomePage> {
             }
           : null,
       child: Text(title, textAlign: TextAlign.center),
-    );
+    ));
   }
 }
