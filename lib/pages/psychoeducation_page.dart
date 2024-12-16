@@ -1,4 +1,3 @@
-// psychoeducation_page.dart
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -99,7 +98,7 @@ class PsychoeducationPage extends StatelessWidget {
   }
 }
 
-// Placeholder pages for Cindy to implement
+// implement here
 class FactsPage extends StatelessWidget {
   const FactsPage({super.key});
 
@@ -122,7 +121,7 @@ class SymptomsPage extends StatelessWidget {
     return Scaffold(
       appBar:
           AppBar(title: Text('Common Symptoms', style: GoogleFonts.lexend())),
-      body: const Center(child: Text('Content to be added by Cindy')),
+      body: const Center(child: Text('Content to be added')),
     );
   }
 }
@@ -135,7 +134,7 @@ class CopingPage extends StatelessWidget {
     return Scaffold(
       appBar:
           AppBar(title: Text('Coping Strategies', style: GoogleFonts.lexend())),
-      body: const Center(child: Text('Content to be added by Cindy')),
+      body: const Center(child: Text('Content to be added')),
     );
   }
 }

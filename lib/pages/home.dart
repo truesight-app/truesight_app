@@ -7,7 +7,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:truesight/pages/psychoeducation_page.dart';
 import 'package:truesight/pages/semantic_test.dart';
 
-// Updated HomePage
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
