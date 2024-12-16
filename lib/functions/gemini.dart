@@ -12,3 +12,4 @@ Future<String?> getPositiveAffirms(String description) async {
   final response = await model.generateContent(content);
   return response.text;
 }
+

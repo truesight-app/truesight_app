@@ -34,7 +34,7 @@ class _PositiveAffsState extends State<PositiveAffs> {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
          Text("What negative thoughts are you having?",
-            style:GoogleFonts.lexend(fontSize: 20)),
+            style:GoogleFonts.lexend(fontSize: 24)),
         const SizedBox(height: 20),
         Container(
           margin: const EdgeInsets.all(10),
@@ -48,7 +48,7 @@ class _PositiveAffsState extends State<PositiveAffs> {
             controller: _descriptionController,
             decoration:  InputDecoration(
               hintText: 'Write down your thoughts here',
-              hintStyle: GoogleFonts.lexend(fontSize: 18), 
+              hintStyle: GoogleFonts.lexend(fontSize: 16), 
               border: OutlineInputBorder(),
             ),
           ),

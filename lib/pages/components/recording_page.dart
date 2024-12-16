@@ -8,6 +8,8 @@ import 'package:truesight/widgets/page_navigator.dart';
 import 'package:audio_waveforms/audio_waveforms.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:truesight/main.dart';
+import 'package:google_fonts/google_fonts.dart';
+
 
 class RecordingPage extends ConsumerStatefulWidget {
   const RecordingPage({super.key, required this.navigatorController});
@@ -216,6 +218,7 @@ class _RecordingPageState extends ConsumerState<RecordingPage> {
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
+
               color: Colors.black87,
             ),
           ),

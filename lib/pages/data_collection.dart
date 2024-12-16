@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:truesight/pages/components/processing_page.dart';
 import 'package:truesight/pages/components/recording_page.dart';
 import 'package:truesight/widgets/page_navigator.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class DataCollection extends StatefulWidget {
   const DataCollection({super.key});
@@ -57,7 +59,7 @@ class _DataCollectionState extends State<DataCollection> {
         .split(RegExp(r'\s+'))
         .where((word) => word.isNotEmpty)
         .length;
-    pageNavigatorController.toggleCanProceed(wordCount >= 5);
+    pageNavigatorController.toggleCanProceed(wordCount >= 10);
   }
 
   @override
@@ -70,16 +72,17 @@ class _DataCollectionState extends State<DataCollection> {
   Widget buildAudioDescription() {
     return Column(
       children: [
-        const Text(
+         Text(
           "Give a brief description on what you are hearing.",
-          style: TextStyle(fontSize: 26),
+          style: GoogleFonts.lexend(fontSize: 24),
         ),
         const SizedBox(height: 20),
         TextField(
           maxLines: 5,
           controller: _descriptionController,
-          decoration: const InputDecoration(
-            hintText: 'Description (minimum 15 words)',
+          decoration: InputDecoration(
+            hintText: 'Description (minimum 10 words)',
+            hintStyle: GoogleFonts.lexend(fontSize: 16), 
             border: OutlineInputBorder(),
           ),
         ),
