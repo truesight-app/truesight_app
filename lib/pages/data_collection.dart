@@ -3,11 +3,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:truesight/pages/components/processing_page.dart';
 import 'package:truesight/pages/components/recording_page.dart';
 import 'package:truesight/widgets/page_navigator.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class DataCollection extends StatefulWidget {
   const DataCollection({super.key});
-
   @override
   State<DataCollection> createState() => _DataCollectionState();
 }
@@ -28,27 +26,23 @@ class _DataCollectionState extends State<DataCollection> {
       numPages: 2,
       nextPage: () {
         _pageController.nextPage(
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeIn,
+          duration: const Duration(milliseconds: 500),
+          curve: Curves.easeInOut,
         );
-
         setState(() {
           currentPage = 1;
         });
       },
       previousPage: () {
         _pageController.previousPage(
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeIn,
+          duration: const Duration(milliseconds: 500),
+          curve: Curves.easeInOut,
         );
-
         setState(() {
           currentPage = 0;
         });
       },
     );
-
-    // Listen to text changes
     _descriptionController.addListener(_checkWordCount);
   }
 
@@ -70,48 +64,123 @@ class _DataCollectionState extends State<DataCollection> {
   }
 
   Widget buildAudioDescription() {
-    return Column(
-      children: [
-         Text(
-          "Give a brief description on what you are hearing.",
-          style: GoogleFonts.lexend(fontSize: 24),
-        ),
-        const SizedBox(height: 20),
-        TextField(
-          maxLines: 5,
-          controller: _descriptionController,
-          decoration: InputDecoration(
-            hintText: 'Description (minimum 10 words)',
-            hintStyle: GoogleFonts.lexend(fontSize: 16), 
-            border: OutlineInputBorder(),
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            spreadRadius: 5,
+            blurRadius: 15,
+            offset: const Offset(0, 3),
           ),
-        ),
-      ],
+        ],
+      ),
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            "What do you hear?",
+            style: GoogleFonts.lexend(
+              fontSize: 28,
+              fontWeight: FontWeight.w600,
+              color: const Color(0xFF2D3142),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            "Describe the sounds around you in detail (minimum 10 words)",
+            style: GoogleFonts.lexend(
+              fontSize: 16,
+              color: Colors.grey[600],
+            ),
+          ),
+          const SizedBox(height: 24),
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.grey[50],
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.grey[200]!),
+            ),
+            child: TextField(
+              maxLines: 5,
+              controller: _descriptionController,
+              style: GoogleFonts.lexend(
+                fontSize: 16,
+                color: const Color(0xFF2D3142),
+              ),
+              decoration: InputDecoration(
+                hintText: 'Share what you\'re hearing...',
+                hintStyle: GoogleFonts.lexend(
+                  fontSize: 16,
+                  color: Colors.grey[400],
+                ),
+                contentPadding: const EdgeInsets.all(20),
+                border: InputBorder.none,
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Builder(
+            builder: (context) {
+              final wordCount = _descriptionController.text
+                  .trim()
+                  .split(RegExp(r'\s+'))
+                  .where((word) => word.isNotEmpty)
+                  .length;
+              return Text(
+                '$wordCount/10 words',
+                style: GoogleFonts.lexend(
+                  fontSize: 14,
+                  color: wordCount >= 10 ? Colors.green : Colors.grey[600],
+                ),
+              );
+            },
+          ),
+        ],
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(),
+      backgroundColor: const Color(0xFFF7F9FC),
+      appBar: AppBar(
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new, color: Color(0xFF2D3142)),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        title: Text(
+          'Sound Analysis',
+          style: GoogleFonts.lexend(
+            color: const Color(0xFF2D3142),
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
       body: Stack(
         children: [
           Padding(
             padding: const EdgeInsets.all(20),
             child: PageView(
               controller: _pageController,
-              physics: const NeverScrollableScrollPhysics(), // Prevent swiping
+              physics: const NeverScrollableScrollPhysics(),
               onPageChanged: (page) {
                 setState(() {
                   currentPage = page;
-                  // Reset canProceed for new page
                   pageNavigatorController.toggleCanProceed(false);
                 });
               },
               children: [
                 buildAudioDescription(),
                 RecordingPage(navigatorController: pageNavigatorController),
-                ProcessingPage(),
+                const ProcessingPage(),
               ],
             ),
           ),
@@ -119,8 +188,23 @@ class _DataCollectionState extends State<DataCollection> {
             bottom: 20,
             left: 20,
             right: 20,
-            child: PageNavigator(
-              pageNavigatorController: pageNavigatorController,
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.grey.withOpacity(0.1),
+                    spreadRadius: 2,
+                    blurRadius: 8,
+                    offset: const Offset(0, -2),
+                  ),
+                ],
+              ),
+              padding: const EdgeInsets.all(16),
+              child: PageNavigator(
+                pageNavigatorController: pageNavigatorController,
+              ),
             ),
           ),
         ],

@@ -8,6 +8,7 @@ import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'dart:typed_data';
 import 'package:ffmpeg_kit_flutter/ffmpeg_kit.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class ProcessingPage extends ConsumerStatefulWidget {
   const ProcessingPage({super.key});
@@ -22,6 +23,7 @@ class _ProcessingPageState extends ConsumerState<ProcessingPage> {
   String? errorMessage;
   String? debugMessage;
   PlayerController? playerController;
+  List<Map<String, dynamic>> predictions = [];
 
   @override
   void initState() {
@@ -37,13 +39,11 @@ class _ProcessingPageState extends ConsumerState<ProcessingPage> {
         _processRecording();
       }
     } catch (e) {
-      print('Initialization error: $e');
       _updateDebug('Init error: $e');
     }
   }
 
   void _updateDebug(String message) {
-    print(message);
     if (mounted) {
       setState(() {
         debugMessage = message;
@@ -51,28 +51,32 @@ class _ProcessingPageState extends ConsumerState<ProcessingPage> {
     }
   }
 
-  int argmax(List<double> list) {
-    var largest = 0;
-    for (var i = 1; i < list.length; i++) {
-      if (list[i] > list[largest]) {
-        largest = i;
-      }
-    }
-    return largest;
-  }
-
   Future<Map<int, String>> loadLabels() async {
     Map<int, String> labels = {};
     try {
-      var file = await rootBundle.loadString('assets/labels.txt');
-      var lines = file.split('\n');
-      for (var i = 1; i < lines.length; i++) {
-        var parts = lines[i].split(' ');
-        if (parts.length >= 2) {
-          var idx = int.tryParse(parts[0]);
-          if (idx != null) {
-            labels[idx] = parts[1];
-          }
+      final file = await rootBundle.loadString('assets/labels.txt');
+      final lines = file.split('\n');
+      for (var line in lines) {
+        // Skip empty lines
+        if (line.trim().isEmpty) continue;
+
+        // Split only on the first space to keep the rest of the label intact
+        final firstSpace = line.indexOf(' ');
+        if (firstSpace == -1) continue;
+
+        final idxStr = line.substring(0, firstSpace).trim();
+        final label = line
+            .substring(firstSpace + 1)
+            .trim()
+            // Remove any quotes from the label
+            .replaceAll('"', '');
+
+        try {
+          final idx = int.parse(idxStr);
+          labels[idx] = label;
+        } catch (e) {
+          print('Error parsing index: $idxStr');
+          continue;
         }
       }
     } catch (e) {
@@ -83,45 +87,35 @@ class _ProcessingPageState extends ConsumerState<ProcessingPage> {
 
   Future<List<double>> preprocessAudio(String audioPath) async {
     try {
-      _updateDebug('Starting audio preprocessing...');
+      _updateDebug('Converting audio format...');
 
-      final file = File(audioPath);
-      if (!await file.exists()) {
-        throw Exception('Audio file not found');
-      }
-
-      // convert file to wav
-      final wavPath = audioPath.replaceAll('.m4a', '.wav');
-      await FFmpegKit.executeAsync(
+      // Convert to WAV with correct parameters for YAMNet
+      final wavPath = '${audioPath.replaceAll('.m4a', '')}_processed.wav';
+      await FFmpegKit.execute(
           '-i $audioPath -acodec pcm_s16le -ac 1 -ar 16000 $wavPath');
 
-      // Get file bytes directly
-      final bytes = await file.readAsBytes();
-      if (bytes.isEmpty) {
-        throw Exception('Audio file is empty');
+      final wavFile = File(wavPath);
+      if (!await wavFile.exists()) {
+        throw Exception('WAV conversion failed');
       }
 
-      _updateDebug('Audio file loaded, size: ${bytes.length} bytes');
-
-      // Convert to list of doubles (assuming 16-bit PCM)
+      final bytes = await wavFile.readAsBytes();
       List<double> samples = [];
-      for (int i = 0; i < bytes.length - 1; i += 2) {
+
+      // Skip WAV header (44 bytes) and convert to mono float32
+      for (int i = 44; i < bytes.length - 1; i += 2) {
         int sample = bytes[i] + (bytes[i + 1] << 8);
         if (sample > 32767) sample -= 65536;
         samples.add(sample / 32768.0);
       }
 
-      _updateDebug('Converted to ${samples.length} samples');
-
-      // Ensure we have exactly 16000 samples
-      if (samples.length > 16000) {
-        samples = samples.sublist(0, 16000);
-      } else if (samples.length < 16000) {
-        samples = List.from(samples)
-          ..addAll(List.filled(16000 - samples.length, 0.0));
+      // YAMNet expects 0.975 seconds of audio (16000 * 0.975 = 15600 samples)
+      if (samples.length > 15600) {
+        samples = samples.sublist(0, 15600);
+      } else if (samples.length < 15600) {
+        samples.addAll(List.filled(15600 - samples.length, 0.0));
       }
 
-      _updateDebug('Final samples prepared: ${samples.length}');
       return samples;
     } catch (e) {
       _updateDebug('Preprocessing error: $e');
@@ -130,76 +124,60 @@ class _ProcessingPageState extends ConsumerState<ProcessingPage> {
   }
 
   Future<void> _processRecording() async {
-    if (isProcessing) {
-      _updateDebug('Already processing, skipping...');
-      return;
-    }
+    if (isProcessing) return;
 
     setState(() {
       isProcessing = true;
       predictionResult = null;
       errorMessage = null;
+      predictions = [];
     });
 
     try {
-      _updateDebug('Starting processing...');
-
       final filePath = ref.read(recordingProvider.notifier).filePath;
-      if (filePath == null) {
-        throw Exception('No recording file path available');
-      }
-      _updateDebug('File path: $filePath');
+      if (filePath == null) throw Exception('No recording found');
 
-      // Verify file exists and has content
-      final file = File(filePath);
-      if (!await file.exists()) {
-        throw Exception('Recording file not found');
-      }
-
-      final fileSize = await file.length();
-      if (fileSize == 0) {
-        throw Exception('Recording file is empty');
-      }
-
-      _updateDebug('File verified, size: $fileSize bytes');
-
-      // Load labels
       final labels = await loadLabels();
-      _updateDebug('Labels loaded: ${labels.length}');
-
-      // Preprocess audio
       final samples = await preprocessAudio(filePath);
-      _updateDebug('Audio preprocessed');
 
-      // Initialize interpreter
+      // Initialize YAMNet
       final interpreter = await Interpreter.fromAsset('assets/yam.tflite');
-      _updateDebug('Interpreter initialized');
 
-      // Prepare input data
-      var input = samples.map((e) => [e]).toList();
+      // Prepare input tensor (1, 15600, 1)
+      final input = [
+        samples.map((e) => [e]).toList()
+      ];
+
+      // Prepare output tensor (1, 521)
       var outputShape = interpreter.getOutputTensor(0).shape;
       var output = List.generate(
           outputShape[0], (_) => List<double>.filled(outputShape[1], 0.0));
 
       // Run inference
       interpreter.run(input, output);
-      _updateDebug('Inference completed');
 
-      // Get prediction
-      var prediction = argmax(output[0]);
+      // Process top predictions
+      final scores = output[0];
+      final sortedIndices = List.generate(scores.length, (i) => i)
+        ..sort((a, b) => scores[b].compareTo(scores[a]));
+
+      // Get top 5 predictions
+      predictions = sortedIndices.take(5).map((index) {
+        return {
+          'label': labels[index] ?? 'Unknown',
+          'confidence': scores[index] * 100,
+        };
+      }).toList();
 
       if (mounted) {
         setState(() {
-          predictionResult = labels[prediction] ?? 'Unknown';
+          predictionResult = predictions.first['label'];
           isProcessing = false;
-          debugMessage = 'Processing completed successfully';
         });
       }
 
-      // Clean up
       interpreter.close();
     } catch (e) {
-      _updateDebug('Error: $e');
       if (mounted) {
         setState(() {
           errorMessage = e.toString();
@@ -210,90 +188,202 @@ class _ProcessingPageState extends ConsumerState<ProcessingPage> {
   }
 
   @override
-  void dispose() {
-    playerController?.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF7F9FC),
       appBar: AppBar(
-        title: const Text('Processing Audio'),
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new, color: Color(0xFF2D3142)),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        title: Text(
+          'Sound Analysis',
+          style: GoogleFonts.lexend(
+            color: const Color(0xFF2D3142),
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
       ),
-      body: Center(
+      body: SingleChildScrollView(
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(24.0),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Debug message
-              if (debugMessage != null) ...[
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  margin: const EdgeInsets.only(bottom: 16),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[200],
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    debugMessage!,
-                    style: const TextStyle(fontSize: 12),
-                  ),
+              // Main Card
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey.withOpacity(0.1),
+                      spreadRadius: 5,
+                      blurRadius: 15,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
                 ),
-              ],
-
-              if (isProcessing)
-                const Column(
+                padding: const EdgeInsets.all(24),
+                child: Column(
                   children: [
-                    CircularProgressIndicator(),
-                    SizedBox(height: 16),
-                    Text('Processing audio...'),
+                    if (isProcessing) ...[
+                      const SizedBox(height: 20),
+                      SizedBox(
+                        height: 100,
+                        width: 100,
+                        child: CircularProgressIndicator(
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Color(0xFF6246EA),
+                          ),
+                          strokeWidth: 8,
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      Text(
+                        'Analyzing your audio...',
+                        style: GoogleFonts.lexend(
+                          fontSize: 20,
+                          color: const Color(0xFF2D3142),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'This might take a moment',
+                        style: GoogleFonts.lexend(
+                          fontSize: 16,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                    ] else if (errorMessage != null) ...[
+                      Icon(Icons.error_outline,
+                          color: Colors.red[400], size: 64),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Analysis Failed',
+                        style: GoogleFonts.lexend(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.red[400],
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        errorMessage!,
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.lexend(
+                          fontSize: 16,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      ElevatedButton(
+                        onPressed: _processRecording,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF6246EA),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 32,
+                            vertical: 16,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                        ),
+                        child: Text(
+                          'Try Again',
+                          style: GoogleFonts.lexend(
+                            color: Colors.white,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ),
+                    ] else if (predictions.isNotEmpty) ...[
+                      Icon(
+                        Icons.check_circle_outline,
+                        color: Colors.green[400],
+                        size: 64,
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Analysis Complete',
+                        style: GoogleFonts.lexend(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w600,
+                          color: const Color(0xFF2D3142),
+                        ),
+                      ),
+                      const SizedBox(height: 32),
+                      ...predictions
+                          .map((pred) => Container(
+                                margin: const EdgeInsets.only(bottom: 12),
+                                padding: const EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[50],
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(color: Colors.grey[200]!),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        pred['label'],
+                                        style: GoogleFonts.lexend(
+                                          fontSize: 16,
+                                          color: const Color(0xFF2D3142),
+                                        ),
+                                      ),
+                                    ),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                        vertical: 6,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color:
+                                            Color(0xFF6246EA).withOpacity(0.1),
+                                        borderRadius: BorderRadius.circular(20),
+                                      ),
+                                      child: Text(
+                                        '${pred['confidence'].toStringAsFixed(1)}%',
+                                        style: GoogleFonts.lexend(
+                                          fontSize: 14,
+                                          color: const Color(0xFF6246EA),
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ))
+                          .toList(),
+                      const SizedBox(height: 24),
+                      ElevatedButton(
+                        onPressed: _processRecording,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF6246EA),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 32,
+                            vertical: 16,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                        ),
+                        child: Text(
+                          'Analyze Again',
+                          style: GoogleFonts.lexend(
+                            color: Colors.white,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ),
+                    ],
                   ],
-                )
-              else if (errorMessage != null)
-                Column(
-                  children: [
-                    const Icon(
-                      Icons.error_outline,
-                      color: Colors.red,
-                      size: 48,
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Error: $errorMessage',
-                      style: const TextStyle(color: Colors.red),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 24),
-                    ElevatedButton(
-                      onPressed: _processRecording,
-                      child: const Text('Try Again'),
-                    ),
-                  ],
-                )
-              else if (predictionResult != null)
-                Column(
-                  children: [
-                    const Icon(
-                      Icons.check_circle_outline,
-                      color: Colors.green,
-                      size: 48,
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Prediction: $predictionResult',
-                      style: Theme.of(context).textTheme.headlineSmall,
-                    ),
-                    const SizedBox(height: 24),
-                    ElevatedButton(
-                      onPressed: _processRecording,
-                      child: const Text('Process Again'),
-                    ),
-                  ],
-                )
-              else
-                const Text('No recording to process'),
+                ),
+              ),
             ],
           ),
         ),

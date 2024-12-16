@@ -10,7 +10,6 @@ import 'package:path_provider/path_provider.dart';
 import 'package:truesight/main.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-
 class RecordingPage extends ConsumerStatefulWidget {
   const RecordingPage({super.key, required this.navigatorController});
   final PageNavigatorController navigatorController;
@@ -209,17 +208,28 @@ class _RecordingPageState extends ConsumerState<RecordingPage> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            spreadRadius: 5,
+            blurRadius: 15,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          const Text(
+          Text(
             "Record your surroundings",
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-
-              color: Colors.black87,
+            style: GoogleFonts.lexend(
+              fontSize: 28,
+              fontWeight: FontWeight.w600,
+              color: const Color(0xFF2D3142),
             ),
           ),
           const SizedBox(height: 8),
@@ -229,7 +239,7 @@ class _RecordingPageState extends ConsumerState<RecordingPage> {
                 : hasRecording
                     ? "Recording complete! You can play it back or record again."
                     : "Press the microphone button to start recording",
-            style: TextStyle(
+            style: GoogleFonts.lexend(
               fontSize: 16,
               color: Colors.grey[600],
             ),
@@ -239,24 +249,40 @@ class _RecordingPageState extends ConsumerState<RecordingPage> {
           // Recording waveform
           if (!hasRecording)
             Container(
-              height: 140,
-              padding: const EdgeInsets.all(16.0),
+              height: 160,
+              padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: Colors.black,
-                borderRadius: BorderRadius.circular(12),
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    const Color(0xFF6246EA),
+                    const Color(0xFF6246EA).withOpacity(0.8),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF6246EA).withOpacity(0.2),
+                    spreadRadius: 2,
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
               child: AudioWaveforms(
-                size: Size(MediaQuery.of(context).size.width - 80, 100),
+                size: Size(MediaQuery.of(context).size.width - 96, 100),
                 recorderController: recorderController,
                 enableGesture: true,
                 waveStyle: const WaveStyle(
                   backgroundColor: Colors.transparent,
                   showMiddleLine: false,
                   extendWaveform: true,
-                  spacing: 5.0,
-                  scaleFactor: 100,
+                  spacing: 6.0,
+                  scaleFactor: 80,
                   waveCap: StrokeCap.round,
                   showBottom: false,
+                  waveColor: Colors.white,
                 ),
               ),
             ),
@@ -264,63 +290,107 @@ class _RecordingPageState extends ConsumerState<RecordingPage> {
           // Playback waveform
           if (hasRecording)
             Container(
-              height: 140,
-              padding: const EdgeInsets.all(16.0),
+              height: 160,
+              padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: Colors.grey[100],
-                borderRadius: BorderRadius.circular(12),
+                color: Colors.grey[50],
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: Colors.grey[200]!,
+                  width: 1,
+                ),
               ),
               child: AudioFileWaveforms(
-                size: Size(MediaQuery.of(context).size.width - 80, 100),
+                size: Size(MediaQuery.of(context).size.width - 96, 100),
                 playerController: playerController,
                 enableSeekGesture: true,
-                backgroundColor: Colors.black,
+                backgroundColor: Colors.transparent,
                 playerWaveStyle: const PlayerWaveStyle(
                   scaleFactor: 0.8,
                   waveCap: StrokeCap.round,
                   spacing: 6.0,
-                  liveWaveColor: Colors.blue,
+                  liveWaveColor: Color(0xFF6246EA),
                   showBottom: false,
-                  seekLineColor: Colors.blue,
-                  seekLineThickness: 4,
+                  seekLineColor: Color(0xFF6246EA),
+                  seekLineThickness: 2,
                 ),
               ),
             ),
 
-          const SizedBox(height: 40),
+          const SizedBox(height: 32),
 
-          // Recording timer or playback controls
+          // Recording timer
           if (isRecording)
-            Text(
-              '${maxDuration.inSeconds - recordingSeconds} seconds remaining',
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w500,
-                color: Colors.red,
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              decoration: BoxDecoration(
+                color: Colors.red[50],
+                borderRadius: BorderRadius.circular(30),
+                border: Border.all(color: Colors.red[100]!),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.timer, color: Colors.red[400], size: 20),
+                  const SizedBox(width: 8),
+                  Text(
+                    '${maxDuration.inSeconds - recordingSeconds} seconds remaining',
+                    style: GoogleFonts.lexend(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.red[400],
+                    ),
+                  ),
+                ],
               ),
             ),
 
+          // Playback controls
           if (hasRecording && !isRecording)
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 ElevatedButton.icon(
                   onPressed: _togglePlayback,
-                  icon: Icon(isPlaying ? Icons.pause : Icons.play_arrow),
-                  label: Text(isPlaying ? 'Pause' : 'Play'),
+                  icon: Icon(
+                    isPlaying ? Icons.pause : Icons.play_arrow,
+                    color: Colors.white,
+                  ),
+                  label: Text(
+                    isPlaying ? 'Pause' : 'Play',
+                    style: GoogleFonts.lexend(color: Colors.white),
+                  ),
                   style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF6246EA),
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 24, vertical: 12),
+                      horizontal: 24,
+                      vertical: 16,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 16),
                 ElevatedButton.icon(
                   onPressed: _startRecording,
-                  icon: const Icon(Icons.refresh),
-                  label: const Text('Record Again'),
+                  icon: const Icon(Icons.refresh, color: Color(0xFF6246EA)),
+                  label: Text(
+                    'Record Again',
+                    style: GoogleFonts.lexend(
+                      color: const Color(0xFF6246EA),
+                    ),
+                  ),
                   style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 24, vertical: 12),
+                      horizontal: 24,
+                      vertical: 16,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                      side: const BorderSide(color: Color(0xFF6246EA)),
+                    ),
                   ),
                 ),
               ],
@@ -332,47 +402,71 @@ class _RecordingPageState extends ConsumerState<RecordingPage> {
           if (!hasRecording || isRecording)
             Container(
               decoration: BoxDecoration(
-                color: isRecording ? Colors.red : Colors.blue,
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: isRecording
+                      ? [Colors.red[400]!, Colors.red[600]!]
+                      : [
+                          const Color(0xFF6246EA),
+                          const Color(0xFF6246EA).withOpacity(0.8),
+                        ],
+                ),
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: (isRecording ? Colors.red : Colors.blue)
+                    color: (isRecording
+                            ? Colors.red[400]!
+                            : const Color(0xFF6246EA))
                         .withOpacity(0.3),
                     spreadRadius: 2,
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
+                    blurRadius: 15,
+                    offset: const Offset(0, 4),
                   ),
                 ],
               ),
-              child: IconButton(
-                iconSize: 48.0,
-                onPressed: isRecording
-                    ? () async {
-                        await ref
-                            .read(recordingProvider.notifier)
-                            .setFilePath(recordingPath);
-                        _stopRecording();
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(40),
+                  onTap: isRecording
+                      ? () async {
+                          await ref
+                              .read(recordingProvider.notifier)
+                              .setFilePath(recordingPath);
+                          _stopRecording();
 
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Recording saved!'),
-                            duration: Duration(seconds: 2),
-                          ),
-                        );
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                'Recording saved!',
+                                style: GoogleFonts.lexend(),
+                              ),
+                              backgroundColor: const Color(0xFF6246EA),
+                              duration: const Duration(seconds: 2),
+                              behavior: SnackBarBehavior.floating,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                          );
 
-                        // Navigate to processing page
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (context) => const ProcessingPage(),
-                          ),
-                        );
-                      }
-                    : _startRecording,
-                icon: Icon(
-                  isRecording ? Icons.stop : Icons.mic,
-                  color: Colors.red,
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => const ProcessingPage(),
+                            ),
+                          );
+                        }
+                      : _startRecording,
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Icon(
+                      isRecording ? Icons.stop : Icons.mic,
+                      size: 48,
+                      color: Colors.white,
+                    ),
+                  ),
                 ),
-                padding: const EdgeInsets.all(16),
               ),
             ),
         ],

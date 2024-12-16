@@ -63,7 +63,10 @@ class _SemanticTestPageState extends State<SemanticTestPage> {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Colors.blue.shade100, Colors.purple.shade100],
+          colors: [
+            Colors.blue.shade100,
+            const Color.fromARGB(255, 231, 190, 200)
+          ],
         ),
       ),
       padding: const EdgeInsets.all(24.0),
@@ -383,9 +386,8 @@ Otherwise, indicate normal semantic correlation.
       appBar: AppBar(
         title: const Text(
           'Semantic Test',
-          style: TextStyle(color: Colors.white),
+          style: TextStyle(color: Colors.black),
         ),
-        backgroundColor: Colors.purple,
         elevation: 0,
       ),
       body: PageView(
