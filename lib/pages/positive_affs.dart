@@ -16,79 +16,182 @@ class _PositiveAffsState extends State<PositiveAffs> {
   final TextEditingController _descriptionController = TextEditingController();
 
   @override
-  void initState() {
-    // execute this function when the page is loaded
-    super.initState();
-  }
-
-  @override
   void dispose() {
-    // free up memory when we leave this page
-
     _descriptionController.dispose();
     super.dispose();
   }
 
   Widget buildTop() {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-         Text("What negative thoughts are you having?",
-            style:GoogleFonts.lexend(fontSize: 24)),
-        const SizedBox(height: 20),
-        Container(
-          margin: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.black),
-            borderRadius: BorderRadius.circular(10),
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            spreadRadius: 5,
+            blurRadius: 15,
+            offset: const Offset(0, 3),
           ),
-          child: TextField(
-            maxLines: 5,
-            onChanged: (value) {},
-            controller: _descriptionController,
-            decoration:  InputDecoration(
-              hintText: 'Write down your thoughts here',
-              hintStyle: GoogleFonts.lexend(fontSize: 16), 
-              border: OutlineInputBorder(),
+        ],
+      ),
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            "What's on your mind?",
+            style: GoogleFonts.lexend(
+              fontSize: 28,
+              fontWeight: FontWeight.w600,
+              color: const Color(0xFF2D3142),
             ),
           ),
-        ),
-      ],
+          const SizedBox(height: 8),
+          Text(
+            "Share your thoughts, and let's transform them together.",
+            style: GoogleFonts.lexend(
+              fontSize: 16,
+              color: Colors.grey[600],
+            ),
+          ),
+          const SizedBox(height: 24),
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.grey[50],
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.grey[200]!),
+            ),
+            child: TextField(
+              maxLines: 5,
+              onChanged: (value) {
+                setState(() {});
+              },
+              controller: _descriptionController,
+              style: GoogleFonts.lexend(
+                fontSize: 16,
+                color: const Color(0xFF2D3142),
+              ),
+              decoration: InputDecoration(
+                hintText: 'Write down your thoughts here...',
+                hintStyle: GoogleFonts.lexend(
+                  fontSize: 16,
+                  color: Colors.grey[400],
+                ),
+                contentPadding: const EdgeInsets.all(20),
+                border: InputBorder.none,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    // TODO: implement build
     return SafeArea(
       child: Scaffold(
-        appBar: AppBar(),
-        floatingActionButton: FloatingActionButton(
-          child: const Icon(Icons.generating_tokens),
+        backgroundColor: const Color(0xFFF7F9FC),
+        appBar: AppBar(
+          elevation: 0,
+          backgroundColor: Colors.transparent,
+          leading: IconButton(
+            icon:
+                const Icon(Icons.arrow_back_ios_new, color: Color(0xFF2D3142)),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+          title: Text(
+            'Positive Affirmations',
+            style: GoogleFonts.lexend(
+              color: const Color(0xFF2D3142),
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+        floatingActionButton: FloatingActionButton.extended(
+          backgroundColor: const Color(0xFF6246EA),
           onPressed: () {
-            // generate new response
             setState(() {});
           },
+          icon: const Icon(Icons.auto_awesome, color: Colors.white),
+          label: Text(
+            'Transform',
+            style: GoogleFonts.lexend(color: Colors.white),
+          ),
         ),
         body: Container(
           padding: const EdgeInsets.all(20),
           child: Column(
             children: [
               buildTop(),
+              const SizedBox(height: 24),
               if (_descriptionController.text.isNotEmpty)
-                FutureBuilder(
-                  future: getPositiveAffirms(_descriptionController.text),
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.done) {
-                      return Expanded(child: Markdown(
-                        data: snapshot.data ?? '',
-                        styleSheet: MarkdownStyleSheet(
-                          p: GoogleFonts.lexend(fontSize: 18),
+                Expanded(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.withOpacity(0.1),
+                          spreadRadius: 5,
+                          blurRadius: 15,
+                          offset: const Offset(0, 3),
                         ),
-                      ),);
-                    }
-                    return const CircularProgressIndicator();
-                  },
+                      ],
+                    ),
+                    padding: const EdgeInsets.all(24),
+                    child: FutureBuilder(
+                      future: getPositiveAffirms(_descriptionController.text),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.done) {
+                          return Markdown(
+                            data: snapshot.data ?? '',
+                            styleSheet: MarkdownStyleSheet(
+                              p: GoogleFonts.lexend(
+                                fontSize: 18,
+                                color: const Color(0xFF2D3142),
+                                height: 1.6,
+                              ),
+                              h1: GoogleFonts.lexend(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                color: const Color(0xFF2D3142),
+                              ),
+                              h2: GoogleFonts.lexend(
+                                fontSize: 22,
+                                fontWeight: FontWeight.w600,
+                                color: const Color(0xFF2D3142),
+                              ),
+                            ),
+                          );
+                        }
+                        return Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const CircularProgressIndicator(
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  Color(0xFF6246EA),
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                'Transforming your thoughts...',
+                                style: GoogleFonts.lexend(
+                                  color: Colors.grey[600],
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ),
                 ),
             ],
           ),
@@ -96,12 +199,4 @@ class _PositiveAffsState extends State<PositiveAffs> {
       ),
     );
   }
-}
-
-int clamp(int value, int min, int max) {
-  return value < min
-      ? min
-      : value > max
-          ? max
-          : value;
 }
