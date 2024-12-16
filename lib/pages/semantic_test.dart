@@ -11,11 +11,11 @@ class _SemanticTestPageState extends State<SemanticTestPage> {
   bool started = false;
   bool finished = false;
 
-  final PageController _controller = PageController();
+  final PageController _controller = PageController(initialPage: 0);
 
   int currentPage = 0;
 
-  late var pages;
+  late List<Widget> pages;
 
   @override
   void initState() {
@@ -27,21 +27,32 @@ class _SemanticTestPageState extends State<SemanticTestPage> {
     ];
   }
 
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
   Widget introPage() {
     return Container(
+      padding: const EdgeInsets.all(16.0),
       child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text("Instructions here"),
+          const Text(
+            "Instructions here",
+            style: TextStyle(fontSize: 18),
+          ),
+          const SizedBox(height: 20),
           ElevatedButton(
               onPressed: () {
-         
-                  _controller.animateToPage(1,
-                      duration: Duration(milliseconds: 500),
-                      curve: Curves.easeInBack);
-                  print("Navigated to Timer Page");
-          
+                started = true;
+                _controller.animateToPage(1,
+                    duration: const Duration(milliseconds: 500),
+                    curve: Curves.easeInOut);
+                print("Navigated to Timer Page");
               },
-              child: Text("Start Test"))
+              child: const Text("Start Test"))
         ],
       ),
     );
@@ -49,19 +60,25 @@ class _SemanticTestPageState extends State<SemanticTestPage> {
 
   Widget timerPage() {
     return Container(
+      padding: const EdgeInsets.all(16.0),
       child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text("Timer"),
+          const Text(
+            "Timer",
+            style: TextStyle(fontSize: 18),
+          ),
+          const SizedBox(height: 20),
           ElevatedButton(
               onPressed: () {
-           
-                  _controller.animateToPage(2,
-                      duration: Duration(milliseconds: 500),
-                      curve: Curves.easeInBack);
-                  print("Navigated to Results Page");
-        
+                if (started == false) return;
+                finished = true;
+                _controller.animateToPage(2,
+                    duration: const Duration(milliseconds: 500),
+                    curve: Curves.easeInOut);
+                print("Navigated to Results Page");
               },
-              child: Text("End Test"))
+              child: const Text("End Test"))
         ],
       ),
     );
@@ -69,19 +86,24 @@ class _SemanticTestPageState extends State<SemanticTestPage> {
 
   Widget resultsPage() {
     return Container(
+      padding: const EdgeInsets.all(16.0),
       child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text("Results"),
+          const Text(
+            "Results",
+            style: TextStyle(fontSize: 18),
+          ),
+          const SizedBox(height: 20),
           ElevatedButton(
               onPressed: () {
-  
-                  _controller.animateToPage(0,
-                      duration: Duration(milliseconds: 500),
-                      curve: Curves.easeInBack);
-                  print("Navigated to Intro Page");
-           
+                started = false;
+                _controller.animateToPage(0,
+                    duration: const Duration(milliseconds: 500),
+                    curve: Curves.easeInOut);
+                print("Navigated to Intro Page");
               },
-              child: Text("Restart test"))
+              child: const Text("Restart test"))
         ],
       ),
     );
@@ -90,18 +112,19 @@ class _SemanticTestPageState extends State<SemanticTestPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(),
-      body: Container(
-        child: PageView(
-          onPageChanged: (index) {
-            setState(() {
-              currentPage = index;
-              print("Current Page: $currentPage");
-            });
-          },
-          controller: _controller,
-          children: pages,
-        ),
+      appBar: AppBar(
+        title: const Text('Semantic Test'),
+      ),
+      body: PageView(
+        physics: const NeverScrollableScrollPhysics(),
+        onPageChanged: (index) {
+          setState(() {
+            currentPage = index;
+            print("Current Page: $currentPage");
+          });
+        },
+        controller: _controller,
+        children: pages,
       ),
     );
   }
