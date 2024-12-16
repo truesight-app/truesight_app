@@ -4,8 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:truesight/pages/data_collection.dart';
 import 'package:truesight/pages/positive_affs.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:truesight/pages/psychoeducation_page.dart';
 import 'package:truesight/pages/semantic_test.dart';
 
+// Updated HomePage
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -17,13 +19,22 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF7F9FC),
       appBar: AppBar(
-        title: Text('Dashboard', style: GoogleFonts.lexend(fontSize: 24)),
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+        title: Text(
+          'Dashboard',
+          style: GoogleFonts.lexend(
+            fontSize: 24,
+            color: const Color(0xFF2D3142),
+            fontWeight: FontWeight.w600,
+          ),
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: ListView(
-          
           children: [
             _buildDashboardButton(
               context,
@@ -43,7 +54,14 @@ class _HomePageState extends State<HomePage> {
               context,
               "Category Fluency Test",
               const Color.fromARGB(255, 217, 161, 112),
-              SemanticTestPage(),
+              const SemanticTestPage(),
+              110,
+            ),
+            _buildDashboardButton(
+              context,
+              "Psychoeducation",
+              const Color(0xFF8E94F2),
+              const PsychoeducationPage(),
               110,
             ),
           ],
@@ -52,33 +70,44 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildDashboardButton(
-      BuildContext context, String title, Color color, Widget? page, double size) {
+  Widget _buildDashboardButton(BuildContext context, String title, Color color,
+      Widget? page, double size) {
     return Padding(
-      padding: EdgeInsets.all(16.0),
-      child: SizedBox(
+      padding: const EdgeInsets.all(16.0),
+      child: Container(
         height: size,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(15),
+          boxShadow: [
+            BoxShadow(
+              color: color.withOpacity(0.3),
+              spreadRadius: 2,
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
         child: ElevatedButton(
-      style: ElevatedButton.styleFrom(
-        backgroundColor: color,
-        padding: const EdgeInsets.all(16.0),
-        textStyle: GoogleFonts.lexend(fontSize: 20),
-        
-
+          style: ElevatedButton.styleFrom(
+            backgroundColor: color,
+            padding: const EdgeInsets.all(16.0),
+            textStyle: GoogleFonts.lexend(fontSize: 20),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(15),
+            ),
+          ),
+          onPressed: page != null
+              ? () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => page,
+                    ),
+                  );
+                }
+              : null,
+          child: Text(title, textAlign: TextAlign.center),
+        ),
       ),
-      onPressed: page != null
-          ? () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => page,
-                ),
-              );
-            }
-          : null,
-      child: Text(title, textAlign: TextAlign.center),
-    )
-      ),
-    
     );
   }
 }
