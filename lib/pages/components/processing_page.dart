@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:tflite_flutter/tflite_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:truesight/functions/gemini.dart';
+import 'package:truesight/pages/report.dart';
+import 'package:truesight/providers/formStateProvider.dart';
 import 'package:truesight/providers/recordingProvider.dart';
 import 'package:audio_waveforms/audio_waveforms.dart';
 import 'dart:io';
@@ -169,6 +172,15 @@ class _ProcessingPageState extends ConsumerState<ProcessingPage> {
         };
       }).toList();
 
+      // all 5 predictions as a string
+      String preds = '';
+      for (var pred in predictions) {
+        preds +=
+            '${pred['label']} (${pred['confidence'].toStringAsFixed(1)}%), ';
+      }
+
+      ref.read(formStateProvider.notifier).setTranscribedAudio(preds);
+
       if (mounted) {
         setState(() {
           predictionResult = predictions.first['label'];
@@ -190,23 +202,10 @@ class _ProcessingPageState extends ConsumerState<ProcessingPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF7F9FC),
       appBar: AppBar(
-        elevation: 0,
-        backgroundColor: Colors.transparent,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: Color(0xFF2D3142)),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        title: Text(
-          'Sound Analysis',
-          style: GoogleFonts.lexend(
-            color: const Color(0xFF2D3142),
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
+        title: const Text('Processing Audio'),
       ),
+      backgroundColor: const Color(0xFFF7F9FC),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(24.0),
@@ -380,6 +379,29 @@ class _ProcessingPageState extends ConsumerState<ProcessingPage> {
                           ),
                         ),
                       ),
+                      ElevatedButton(
+                          onPressed: () async {
+                            final audioDescription =
+                                ref.read(formStateProvider).audioDescription;
+
+                            final transcription =
+                                ref.read(formStateProvider).transcribedAudio;
+
+                            final response =
+                                await compareTranscriptionAndDescription(
+                                    transcription, audioDescription);
+
+                            ref
+                                .read(formStateProvider.notifier)
+                                .setLLMResponse(response!);
+
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (context) => const ReportPage(),
+                              ),
+                            );
+                          },
+                          child: Text("Generate Report"))
                     ],
                   ],
                 ),

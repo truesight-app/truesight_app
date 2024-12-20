@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:truesight/pages/components/processing_page.dart';
 import 'package:truesight/pages/components/recording_page.dart';
+import 'package:truesight/providers/formStateProvider.dart';
 import 'package:truesight/widgets/page_navigator.dart';
 
-class DataCollection extends StatefulWidget {
+class DataCollection extends ConsumerStatefulWidget {
   const DataCollection({super.key});
   @override
-  State<DataCollection> createState() => _DataCollectionState();
+  ConsumerState<DataCollection> createState() => _DataCollectionState();
 }
 
-class _DataCollectionState extends State<DataCollection> {
+class _DataCollectionState extends ConsumerState<DataCollection> {
   late final PageController _pageController = PageController();
   final TextEditingController _descriptionController = TextEditingController();
   late PageNavigatorController pageNavigatorController;
@@ -107,6 +109,20 @@ class _DataCollectionState extends State<DataCollection> {
             child: TextField(
               maxLines: 5,
               controller: _descriptionController,
+              onChanged: (value) {
+                final wordCount = value
+                    .trim()
+                    .split(RegExp(r'\s+'))
+                    .where((word) => word.isNotEmpty)
+                    .length;
+                setState(() {
+                  pageNavigatorController.toggleCanProceed(wordCount >= 5);
+                });
+                // set value in provider for use in the next pages
+                ref
+                    .read(formStateProvider.notifier)
+                    .setAudioDescription(_descriptionController.text);
+              },
               style: GoogleFonts.lexend(
                 fontSize: 16,
                 color: const Color(0xFF2D3142),
@@ -131,10 +147,10 @@ class _DataCollectionState extends State<DataCollection> {
                   .where((word) => word.isNotEmpty)
                   .length;
               return Text(
-                '$wordCount/10 words',
+                '$wordCount/5 words',
                 style: GoogleFonts.lexend(
                   fontSize: 14,
-                  color: wordCount >= 10 ? Colors.green : Colors.grey[600],
+                  color: wordCount >= 5 ? Colors.green : Colors.grey[600],
                 ),
               );
             },
