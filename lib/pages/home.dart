@@ -74,7 +74,7 @@ class _HomePageState extends State<HomePage> {
             ),
             _buildDashboardButton(
               context,
-              "Psychoeducation",
+              "Education",
               const Color(0xFF8E94F2),
               const PsychoeducationPage(),
               110,

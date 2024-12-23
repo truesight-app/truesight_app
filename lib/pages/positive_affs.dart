@@ -64,6 +64,7 @@ class _PositiveAffsState extends State<PositiveAffs> {
               border: Border.all(color: Colors.grey[200]!),
             ),
             child: TextField(
+
               maxLines: 5,
               onChanged: (value) {
                 setState(() {});
@@ -93,6 +94,7 @@ class _PositiveAffsState extends State<PositiveAffs> {
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
+        resizeToAvoidBottomInset: false,
         backgroundColor: const Color(0xFFF7F9FC),
         appBar: AppBar(
           elevation: 0,
@@ -147,6 +149,15 @@ class _PositiveAffsState extends State<PositiveAffs> {
                     child: FutureBuilder(
                       future: getPositiveAffirms(_descriptionController.text),
                       builder: (context, snapshot) {
+                        if (snapshot.data == null) {
+                          return const Center(
+                            child: CircularProgressIndicator(
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Color(0xFF6246EA),
+                              ),
+                            ),
+                          );
+                        }
                         if (snapshot.connectionState == ConnectionState.done) {
                           return Markdown(
                             data: snapshot.data ?? '',

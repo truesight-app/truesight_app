@@ -93,7 +93,7 @@ class _DataCollectionState extends ConsumerState<DataCollection> {
           ),
           const SizedBox(height: 8),
           Text(
-            "Describe the sounds around you in detail (minimum 10 words)",
+            "Describe the sounds around you in detail (minimum 5 words)",
             style: GoogleFonts.lexend(
               fontSize: 16,
               color: Colors.grey[600],
