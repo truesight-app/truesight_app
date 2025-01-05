@@ -53,29 +53,30 @@ class _HomePageState extends State<HomePage> {
           children: [
             _buildDashboardButton(
               context,
-              "Hallucination Detection",
-              const Color.fromARGB(255, 139, 194, 238),
-              const DataCollection(),
+              "Category Fluency Test",
+              const Color.fromARGB(255, 184, 221, 255),
+              const SemanticTestPage()
+              ,
               110,
             ),
             _buildDashboardButton(
               context,
               "Positive Affirmations",
-              const Color.fromARGB(255, 203, 177, 247),
+              const Color.fromARGB(255, 184, 209, 255),
               const PositiveAffs(),
               110,
             ),
             _buildDashboardButton(
               context,
-              "Category Fluency Test",
-              const Color.fromARGB(255, 217, 161, 112),
-              const SemanticTestPage(),
+              "Hallucination Detection",
+              const Color.fromARGB(255, 184, 186, 255),
+              const DataCollection(),
               110,
             ),
             _buildDashboardButton(
               context,
               "Education",
-              const Color(0xFF8E94F2),
+              const Color.fromARGB(255, 201, 188, 255),
               const PsychoeducationPage(),
               110,
             ),
@@ -106,7 +107,7 @@ class _HomePageState extends State<HomePage> {
           style: ElevatedButton.styleFrom(
             backgroundColor: color,
             padding: const EdgeInsets.all(16.0),
-            textStyle: GoogleFonts.lexend(fontSize: 20),
+            textStyle: GoogleFonts.lexend(fontSize: 20, color: Colors.black),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(15),
             ),

@@ -68,6 +68,7 @@ class PsychoeducationPage extends StatelessWidget {
             fontWeight: FontWeight.w600,
           ),
         ),
+  
       ),
       body: SafeArea(
         child: Padding(
@@ -95,7 +96,7 @@ class PsychoeducationPage extends StatelessWidget {
               _buildOptionButton(
                 context,
                 "Resources",
-                const Color(0xFFDBA5C7),
+                const Color.fromARGB(255, 226, 176, 189),
                 const ResourcesPage(),
               ),
             ],
@@ -138,81 +139,18 @@ class FactsPage extends StatelessWidget {
       body: Padding(
         padding: const EdgeInsets.all(8.0),
         child: renderMarkdown("""
-# Schizophrenia: Medical Overview
 
-## Definition
-Schizophrenia is a complex neuropsychiatric disorder that affects approximately 1% of the global population, impacting how individuals perceive reality, think, and behave.
+* Schizophrenia affects about 1% of the world’s population, (60 million people, around the world)\
 
-## Core Symptoms
 
-### Positive Symptoms (Additions to Normal Experience) 
-* Hallucinations - most commonly auditory (hearing voices), though visual, tactile, and other sensory experiences can occur. These experiences feel entirely real to the person experiencing them. The voices may give commands, comment on the person's behavior, or engage in conversation.
+* Schizophrenia is a mental illness, just like stroke, Parkinson’s disease, Alzheimer’s disease and others.\
 
-* Delusions - fixed false beliefs that persist despite contrary evidence. Common types include paranoid delusions (believing others are plotting against them), grandiose delusions (believing they have special powers), or referential delusions (believing random events have special meaning for them).
+* About 50% of patients with schizophrenia do not take their prescribed medications as directed because they are unaware of their condition.\
 
-* Disorganized thinking and speech - including derailment (switching topics abruptly), tangentiality (giving unrelated answers to questions), or word salad (incomprehensible mixture of words and phrases).
+* Lack of treatment leads to severe negative health outcomes, including a life expectancy shortened by an average of 28.5 years.  
 
-### Negative Symptoms (Reductions in Normal Function)
-* Reduced emotional expression ("flat affect") - diminished facial expressions, monotone voice, and reduced body language.
 
-* Avolition - severe reduction in motivated self-initiated purposeful activities.
 
-* Social withdrawal - decreased interest in social relationships and difficulty maintaining connections.
-
-* Anhedonia - reduced ability to experience pleasure from activities.
-
-## Cognitive Symptoms
-* Working memory deficits - difficulty using information immediately after learning it.
-
-* Attention problems - challenges focusing and filtering out distractions.
-
-* Executive functioning issues - problems with planning, organizing, and decision-making.
-
-## Causes and Risk Factors
-* Genetic factors - having a close relative with schizophrenia increases risk.
-
-* Environmental factors - including:
- - Pregnancy/birth complications
- - Cannabis use in adolescence
- - Childhood trauma
- - Urban environment
- - Migration
- - Social isolation
-
-## Treatment Approaches
-* Antipsychotic medications - primary pharmacological treatment targeting dopamine systems.
-
-* Psychosocial interventions - including:
- - Cognitive Behavioral Therapy (CBT)
- - Family psychoeducation
- - Social skills training
- - Vocational rehabilitation
-
-* Comprehensive treatment plans typically combine medication with psychosocial support.
-
-## Course and Prognosis
-* Onset typically occurs between late teens and early 30s.
-
-* Course varies significantly between individuals - some experience episodes with periods of remission, others have more continuous symptoms.
-
-* Early intervention generally associated with better outcomes.
-
-* With proper treatment and support, many people with schizophrenia live fulfilling lives and manage their symptoms effectively.
-
-## Scientific Research
-* Current research focuses on:
- - Neurobiological mechanisms
- - Genetic risk factors
- - Novel treatment approaches
- - Early intervention strategies
- - Prevention methods
-
-## Support and Resources
-* Treatment typically involves a team of healthcare professionals including psychiatrists, psychologists, social workers, and case managers.
-
-* Support groups and family education programs play important roles in comprehensive care.
-
-* Crisis intervention services and supported housing/employment programs may be beneficial components of treatment.
       """),
       ),
     );
@@ -229,7 +167,18 @@ class SymptomsPage extends StatelessWidget {
           AppBar(title: Text('Common Symptoms', style: GoogleFonts.lexend())),
       body: Padding(
         padding: const EdgeInsets.all(8.0),
-        child: renderMarkdown(""),
+        child: renderMarkdown("""
+
+* Delusions: Believing in things that aren't real or true.\
+
+* Hallucinations: Seeing or hearing things that other people don't observe.\
+
+* Disorganized speech and thinking.\
+
+* Extremely disorganized or unusual motor behavior: Childlike silliness or being agitated for no reason.\
+
+* Negative symptoms: Lose interest in everyday activities, socially withdraw and have a hard time planning ahead.\
+      """),
       ),
     );
   }
@@ -243,7 +192,17 @@ class TreatmentPage extends StatelessWidget {
     return Scaffold(
       appBar:
           AppBar(title: Text('Coping Strategies', style: GoogleFonts.lexend())),
-      body: const Center(child: Text('Content to be added')),
+      body: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: renderMarkdown("""
+
+* Psychotherapy: A therapist or psychiatrist can teach a patient how to deal with their thoughts and behavior, how to improve their attention, memory, and ability to organize their thoughts\
+
+* Psychosocial therapy: It teaches a patient social skills, helps them build a sense of optimism, provides job counseling, and education in money management.\
+
+* Medication: There are many antipsychotic drugs. However, some drugs can cause weight gain and raise blood sugar and cholesterol levels. Changes in nutrition and exercise along with medication intervention can help address these side effects.\
+      """),
+      ),
     );
   }
 }
@@ -255,7 +214,19 @@ class ResourcesPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text('Resources', style: GoogleFonts.lexend())),
-      body: const Center(child: Text('Content to be added')),
+      body: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: renderMarkdown("""
+
+* S&PAA - Schizophrenia & Psychosis Action Alliance\
+
+* CureSZ Foundation\
+
+* NAMI - National Alliance on Mental Illness\
+
+* TAC - Treatment Advocacy Center\
+      """),
+      ),
     );
   }
 }
