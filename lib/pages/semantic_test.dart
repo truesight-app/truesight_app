@@ -11,10 +11,11 @@ class SemanticTestPage extends StatefulWidget {
 
 class _SemanticTestPageState extends State<SemanticTestPage> {
   bool started = false;
-  bool finished = false;
-  int timeLeft = 60;
+  bool finished = false; // finished the entire analysis
+  // int timeLeft = 60;
+  ValueNotifier<int> timeLeft = ValueNotifier(60);
   Timer? _timer;
-
+  FocusNode testFieldFocusNode = FocusNode();
   final PageController _controller = PageController(initialPage: 0);
   int currentPage = 0;
   late List<Widget> pages;
@@ -34,8 +35,8 @@ class _SemanticTestPageState extends State<SemanticTestPage> {
   void startTimer() {
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       setState(() {
-        if (timeLeft > 0) {
-          timeLeft--;
+        if (timeLeft.value > 0) {
+          timeLeft.value--;
         } else {
           _timer?.cancel();
           if (started && !finished) {
@@ -103,7 +104,7 @@ class _SemanticTestPageState extends State<SemanticTestPage> {
                   onPressed: () {
                     setState(() {
                       started = true;
-                      timeLeft = 60;
+                      timeLeft.value = 60;
                       startTimer();
                     });
                     _controller.animateToPage(1,
@@ -156,33 +157,40 @@ class _SemanticTestPageState extends State<SemanticTestPage> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      SizedBox(
-                        width: 120,
-                        height: 120,
-                        child: CircularProgressIndicator(
-                          value: timeLeft / 60,
-                          strokeWidth: 8,
-                          backgroundColor: Colors.grey.shade200,
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            timeLeft > 10 ? Colors.purple : Colors.red,
+                  ValueListenableBuilder(
+                    valueListenable: timeLeft,
+                    builder: (context, val, child) => Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        SizedBox(
+                          width: 120,
+                          height: 120,
+                          child: CircularProgressIndicator(
+                            value: val / 60,
+                            strokeWidth: 8,
+                            backgroundColor: Colors.grey.shade200,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              val > 10 ? Colors.purple : Colors.red,
+                            ),
                           ),
                         ),
-                      ),
-                      Text(
-                        '$timeLeft',
-                        style: TextStyle(
-                          fontSize: 48,
-                          fontWeight: FontWeight.bold,
-                          color: timeLeft > 10 ? Colors.purple : Colors.red,
+                        Text(
+                          '${val}',
+                          style: TextStyle(
+                            fontSize: 48,
+                            fontWeight: FontWeight.bold,
+                            color: timeLeft.value > 10
+                                ? Colors.purple
+                                : Colors.red,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                   const SizedBox(height: 24),
                   TextField(
+                    focusNode: testFieldFocusNode,
+                    autofocus: true,
                     controller: _animalController,
                     decoration: InputDecoration(
                       border: OutlineInputBorder(
@@ -193,11 +201,13 @@ class _SemanticTestPageState extends State<SemanticTestPage> {
                       fillColor: Colors.white,
                       prefixIcon: const Icon(Icons.pets),
                     ),
-                    onSubmitted: (value) {
-                      if (value.isNotEmpty) {
+                    onEditingComplete: () {
+                      if (_animalController.text.isNotEmpty) {
                         setState(() {
-                          animals.add(value);
+                          animals.add(_animalController.text);
                           _animalController.clear();
+                          testFieldFocusNode
+                              .requestFocus(); // Focus on the text field again
                         });
                       }
                     },
@@ -281,66 +291,68 @@ class _SemanticTestPageState extends State<SemanticTestPage> {
                 ),
                 child: Padding(
                   padding: const EdgeInsets.all(32.0),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Text(
-                        "Test Results",
-                        style: TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.purple,
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      Text(
-                        "You listed ${animals.length} animals:",
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        animals.join(", "),
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(fontSize: 16),
-                      ),
-                      const SizedBox(height: 24),
-                      Text(
-                        snapshot.data.toString(),
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(fontSize: 16),
-                      ),
-                      const SizedBox(height: 32),
-                      ElevatedButton(
-                        onPressed: () {
-                          setState(() {
-                            started = false;
-                            finished = false;
-                            timeLeft = 60;
-                            animals.clear();
-                          });
-                          _controller.animateToPage(0,
-                              duration: const Duration(milliseconds: 500),
-                              curve: Curves.easeInOut);
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.purple,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 32,
-                            vertical: 16,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(30),
+                  child: SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text(
+                          "Test Results",
+                          style: TextStyle(
+                            fontSize: 28,
+                            fontWeight: FontWeight.bold,
+                            color: Color.fromARGB(255, 200, 188, 202),
                           ),
                         ),
-                        child: const Text(
-                          "Take Test Again",
-                          style: TextStyle(fontSize: 18, color: Colors.white),
+                        const SizedBox(height: 24),
+                        Text(
+                          "You listed ${animals.length} animals:",
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 8),
+                        Text(
+                          animals.join(", "),
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(fontSize: 16),
+                        ),
+                        const SizedBox(height: 24),
+                        Text(
+                          snapshot.data.toString(),
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(fontSize: 16),
+                        ),
+                        const SizedBox(height: 32),
+                        ElevatedButton(
+                          onPressed: () {
+                            setState(() {
+                              started = false;
+                              finished = false;
+                              timeLeft.value = 60;
+                              animals.clear();
+                            });
+                            _controller.animateToPage(0,
+                                duration: const Duration(milliseconds: 500),
+                                curve: Curves.easeInOut);
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.purple,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 32,
+                              vertical: 16,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(30),
+                            ),
+                          ),
+                          child: const Text(
+                            "Take Test Again",
+                            style: TextStyle(fontSize: 18, color: Colors.white),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
