@@ -12,15 +12,15 @@ class SemanticTestPage extends StatefulWidget {
 class _SemanticTestPageState extends State<SemanticTestPage> {
   bool started = false;
   bool finished = false; // finished the entire analysis
-  // int timeLeft = 60;
-  ValueNotifier<int> timeLeft = ValueNotifier(60);
+  // int timeLeft = 45;
+  ValueNotifier<int> timeLeft = ValueNotifier(45);
   Timer? _timer;
   FocusNode testFieldFocusNode = FocusNode();
   final PageController _controller = PageController(initialPage: 0);
   int currentPage = 0;
   late List<Widget> pages;
   TextEditingController _animalController = TextEditingController();
-  List<String> animals = [];
+  ValueNotifier<List<String>> animals = ValueNotifier([]);
 
   @override
   void initState() {
@@ -34,19 +34,17 @@ class _SemanticTestPageState extends State<SemanticTestPage> {
 
   void startTimer() {
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      setState(() {
-        if (timeLeft.value > 0) {
-          timeLeft.value--;
-        } else {
-          _timer?.cancel();
-          if (started && !finished) {
-            finished = true;
-            _controller.animateToPage(2,
-                duration: const Duration(milliseconds: 500),
-                curve: Curves.easeInOut);
-          }
+      if (timeLeft.value > 0) {
+        timeLeft.value--;
+      } else {
+        _timer?.cancel();
+        if (started && !finished) {
+          finished = true;
+          _controller.animateToPage(2,
+              duration: const Duration(milliseconds: 500),
+              curve: Curves.easeInOut);
         }
-      });
+      }
     });
   }
 
@@ -95,18 +93,17 @@ class _SemanticTestPageState extends State<SemanticTestPage> {
                 ),
                 const SizedBox(height: 16),
                 const Text(
-                  "List as many animals as possible in 60 seconds!",
+                  "List as many animals as possible in 45 seconds!",
                   textAlign: TextAlign.center,
                   style: TextStyle(fontSize: 18, color: Colors.black87),
                 ),
                 const SizedBox(height: 32),
                 ElevatedButton(
                   onPressed: () {
-                    setState(() {
-                      started = true;
-                      timeLeft.value = 60;
-                      startTimer();
-                    });
+                    started = true;
+                    timeLeft.value = 45;
+                    startTimer();
+
                     _controller.animateToPage(1,
                         duration: const Duration(milliseconds: 500),
                         curve: Curves.easeInOut);
@@ -166,7 +163,7 @@ class _SemanticTestPageState extends State<SemanticTestPage> {
                           width: 120,
                           height: 120,
                           child: CircularProgressIndicator(
-                            value: val / 60,
+                            value: val / 45,
                             strokeWidth: 8,
                             backgroundColor: Colors.grey.shade200,
                             valueColor: AlwaysStoppedAnimation<Color>(
@@ -203,9 +200,10 @@ class _SemanticTestPageState extends State<SemanticTestPage> {
                     ),
                     onEditingComplete: () {
                       if (_animalController.text.isNotEmpty) {
+                        animals.value.add(_animalController.text);
                         setState(() {
-                          animals.add(_animalController.text);
                           _animalController.clear();
+
                           testFieldFocusNode
                               .requestFocus(); // Focus on the text field again
                         });
@@ -236,12 +234,15 @@ class _SemanticTestPageState extends State<SemanticTestPage> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  Text(
-                    animals.isEmpty
-                        ? "No animals listed yet"
-                        : animals.join(", "),
-                    style: const TextStyle(fontSize: 16),
-                    textAlign: TextAlign.center,
+                  ValueListenableBuilder(
+                    valueListenable: animals,
+                    builder: (context, value, child) => Text(
+                      value.isEmpty
+                          ? "No animals listed yet"
+                          : value.join(", "),
+                      style: const TextStyle(fontSize: 16),
+                      textAlign: TextAlign.center,
+                    ),
                   ),
                 ],
               ),
@@ -254,7 +255,7 @@ class _SemanticTestPageState extends State<SemanticTestPage> {
 
   Widget resultsPage() {
     return FutureBuilder(
-      future: evaluateAnimals(animals),
+      future: evaluateAnimals(animals.value),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Container(
@@ -305,7 +306,7 @@ class _SemanticTestPageState extends State<SemanticTestPage> {
                         ),
                         const SizedBox(height: 24),
                         Text(
-                          "You listed ${animals.length} animals:",
+                          "You listed ${animals.value.length} animals:",
                           style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -313,7 +314,7 @@ class _SemanticTestPageState extends State<SemanticTestPage> {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          animals.join(", "),
+                          animals.value.join(", "),
                           textAlign: TextAlign.center,
                           style: const TextStyle(fontSize: 16),
                         ),
@@ -329,8 +330,8 @@ class _SemanticTestPageState extends State<SemanticTestPage> {
                             setState(() {
                               started = false;
                               finished = false;
-                              timeLeft.value = 60;
-                              animals.clear();
+                              timeLeft.value = 45;
+                              animals.value.clear();
                             });
                             _controller.animateToPage(0,
                                 duration: const Duration(milliseconds: 500),

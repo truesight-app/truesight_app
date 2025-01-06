@@ -94,8 +94,13 @@ class _ProcessingPageState extends ConsumerState<ProcessingPage> {
 
       // Convert to WAV with correct parameters for YAMNet
       final wavPath = '${audioPath.replaceAll('.m4a', '')}_processed.wav';
+      // save to device directort where we can access it
+      final dir = await getDownloadsDirectory();
+      final outputPath = '${dir!.path}/test4.wav';
+      print(outputPath);
+
       await FFmpegKit.execute(
-          '-i $audioPath -acodec pcm_s16le -ac 1 -ar 16000 $wavPath');
+          '-i $audioPath -acodec pcm_s16le -ac 1 -ar 16000 $outputPath');
 
       final wavFile = File(wavPath);
       if (!await wavFile.exists()) {
@@ -118,6 +123,14 @@ class _ProcessingPageState extends ConsumerState<ProcessingPage> {
       } else if (samples.length < 15600) {
         samples.addAll(List.filled(15600 - samples.length, 0.0));
       }
+
+      // convert trimmed samples back to audio and save to downloads to see if it works
+      final outputFile = File(outputPath);
+      final outputBytes = Uint8List.fromList(samples
+          .map((sample) => (sample * 32767).toInt())
+          .expand((sample) => [sample & 0xFF, (sample >> 8) & 0xFF])
+          .toList());
+      await outputFile.writeAsBytes(outputBytes);
 
       return samples;
     } catch (e) {

@@ -68,7 +68,6 @@ class PsychoeducationPage extends StatelessWidget {
             fontWeight: FontWeight.w600,
           ),
         ),
-  
       ),
       body: SafeArea(
         child: Padding(
@@ -114,13 +113,15 @@ Widget renderMarkdown(String content) {
       child: MarkdownBody(
         data: content,
         styleSheet: MarkdownStyleSheet(
-          textScaleFactor: 1.5,
-          h1: GoogleFonts.lexend(),
-          h2: GoogleFonts.lexend(),
-          h3: GoogleFonts.lexend(),
-          listBullet: GoogleFonts.lexend(),
-          
-        ),
+            textScaleFactor: 1.5,
+            h1: GoogleFonts.lexend(),
+            h2: GoogleFonts.lexend(),
+            h3: GoogleFonts.lexend(),
+            listBullet: GoogleFonts.lexend(
+              fontSize: 25.0,
+            ),
+            p: GoogleFonts.lexend(),
+            blockSpacing: 25.0),
       ),
     ),
   );
@@ -196,11 +197,11 @@ class TreatmentPage extends StatelessWidget {
         padding: const EdgeInsets.all(8.0),
         child: renderMarkdown("""
 
-* Psychotherapy: A therapist or psychiatrist can teach a patient how to deal with their thoughts and behavior, how to improve their attention, memory, and ability to organize their thoughts\
+* Psychotherapy: A therapist or psychiatrist can teach a patient how to deal with their thoughts and behavior, how to improve their attention, memory, and ability to organize their thoughts
 
-* Psychosocial therapy: It teaches a patient social skills, helps them build a sense of optimism, provides job counseling, and education in money management.\
+* Psychosocial therapy: It teaches a patient social skills, helps them build a sense of optimism, provides job counseling, and education in money management.
 
-* Medication: There are many antipsychotic drugs. However, some drugs can cause weight gain and raise blood sugar and cholesterol levels. Changes in nutrition and exercise along with medication intervention can help address these side effects.\
+* Medication: There are many antipsychotic drugs. However, some drugs can cause weight gain and raise blood sugar and cholesterol levels. Changes in nutrition and exercise along with medication intervention can help address these side effects.
       """),
       ),
     );

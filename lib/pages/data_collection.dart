@@ -55,7 +55,7 @@ class _DataCollectionState extends ConsumerState<DataCollection> {
         .split(RegExp(r'\s+'))
         .where((word) => word.isNotEmpty)
         .length;
-    pageNavigatorController.toggleCanProceed(wordCount >= 10);
+    pageNavigatorController.toggleCanProceed(wordCount >= 5);
   }
 
   @override
