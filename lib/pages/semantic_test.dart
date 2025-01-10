@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
 import 'dart:async';
 
@@ -286,23 +288,16 @@ class _SemanticTestPageState extends State<SemanticTestPage> {
                         ),
                         const SizedBox(height: 24),
                         Text(
-                          "You listed ${animals..length} animals:",
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
                           animals.join(", "),
                           textAlign: TextAlign.center,
                           style: const TextStyle(fontSize: 16),
                         ),
                         const SizedBox(height: 24),
-                        Text(
-                          snapshot.data.toString(),
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(fontSize: 16),
+                        MarkdownBody(
+                          data: snapshot.data.toString(),
+                          styleSheet: MarkdownStyleSheet(
+                            p: GoogleFonts.lexend(),
+                          ),
                         ),
                         const SizedBox(height: 32),
                         ElevatedButton(
@@ -361,17 +356,51 @@ class _SemanticTestPageState extends State<SemanticTestPage> {
         apiKey: 'AIzaSyBz8SnJ4nBLT7WsmEw8PN0fZU60WD-Mo4o',
       );
 
-      final prompt = '''
-You are a schizophrenia expert. Analyze these animals for semantic correlation:
-${animals.join(', ')}
+      const prompt = '''
+You are an expert in cognitive assessment specializing in semantic fluency analysis. Analyze these animals for semantic clustering and switching patterns:
 
-Instructions:
-If the animals have no semantic correlation with each other, indicate potential abnormality with this exact response:
-"Category fluency test research indicates that you may have problems organizing your thought semantically. Research indicates that there is a correlation between people having this issue and schizophrenia.
+Perform the following analysis:
+
+1. Identify semantic clusters (groups of related animals), such as:
+   - Farm animals
+   - Wild animals
+   - Pets
+   - Marine animals
+   - Birds
+   - Insects
+   - Geographic regions
+   - Habitats
+
+2. Calculate:
+   - Number of distinct clusters
+   - Average cluster size
+   - Number of switches between clusters
+   - Any repetitions or invalid entries
+
+3. Evaluate response patterns:
+   - Are animals within each cluster semantically related?
+   - Are transitions between clusters logical?
+   - Is there evidence of organized thinking in the clustering?
+
+4. Provide one of these assessments based on specific criteria:
+
+A. If the response shows these characteristics:
+   - Multiple clear semantic clusters (3 or more)
+   - Logical transitions between clusters
+   - Related animals within clusters
+   - Few or no repetitions
+   Return: "Normal semantic pattern detected. Your responses show organized thinking with clear semantic clustering and logical transitions between animal categories."
+
+B. If the response shows these characteristics:
+   - Few or no clear semantic clusters (0-2)
+   - Random or unrelated transitions
+   - Unrelated animals within attempted clusters
+   - Multiple repetitions or invalid entries
+   Return: "Category fluency test research indicates that you may have problems organizing your thoughts semantically. Research indicates that there is a correlation between people having this issue and schizophrenia.
 
 Source: Nour, M. M., McNamee, D., Liu, Y., & Dolan, R. J. (2023). Trajectories through semantic spaces in schizophrenia and the relationship to ripple bursts. Proceedings of the National Academy of Sciences of the United States of America, 120(42). https://doi.org/10.1073/pnas.2305290120"
 
-Otherwise, indicate normal semantic correlation.
+Provide a detailed breakdown of your analysis before stating the final assessment.
 ''';
 
       final content = [Content.text(prompt)];
