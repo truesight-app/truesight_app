@@ -12,6 +12,7 @@ import 'package:path_provider/path_provider.dart';
 import 'dart:typed_data';
 import 'package:ffmpeg_kit_flutter/ffmpeg_kit.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:wav/wav.dart';
 
 class ProcessingPage extends ConsumerStatefulWidget {
   const ProcessingPage({super.key});
@@ -25,7 +26,7 @@ class _ProcessingPageState extends ConsumerState<ProcessingPage> {
   String? predictionResult;
   String? errorMessage;
   String? debugMessage;
-  PlayerController? playerController;
+  late PlayerController playerController;
   List<Map<String, dynamic>> predictions = [];
 
   @override
@@ -37,6 +38,7 @@ class _ProcessingPageState extends ConsumerState<ProcessingPage> {
   Future<void> _initializeProcessing() async {
     try {
       playerController = PlayerController();
+
       await Future.delayed(const Duration(milliseconds: 500));
       if (mounted) {
         _processRecording();
@@ -93,14 +95,21 @@ class _ProcessingPageState extends ConsumerState<ProcessingPage> {
       _updateDebug('Converting audio format...');
 
       // Convert to WAV with correct parameters for YAMNet
+      // save original audio path to file but in downloads too to see if that one is uncorrupted
+      final dir = await getDownloadsDirectory();
+
+      final originalPath = '${dir!.path}/test.m4a';
+      final originalFile = File(originalPath);
+      await originalFile.writeAsBytes(await File(audioPath).readAsBytes());
+
       final wavPath = '${audioPath.replaceAll('.m4a', '')}_processed.wav';
       // save to device directort where we can access it
-      final dir = await getDownloadsDirectory();
+
       final outputPath = '${dir!.path}/test4.wav';
       print(outputPath);
 
       await FFmpegKit.execute(
-          '-i $audioPath -acodec pcm_s16le -ac 1 -ar 16000 $outputPath');
+          '-i $audioPath -acodec pcm_s16le -ar 16000 -ac 1 $wavPath'); // Ensure correct spec
 
       final wavFile = File(wavPath);
       if (!await wavFile.exists()) {
@@ -158,11 +167,9 @@ class _ProcessingPageState extends ConsumerState<ProcessingPage> {
 
       // Initialize YAMNet
       final interpreter = await Interpreter.fromAsset('assets/yam.tflite');
-
-      // Prepare input tensor (1, 15600, 1)
       final input = [
         samples.map((e) => [e]).toList()
-      ];
+      ]; // Ensure [15600, 1] shape
 
       // Prepare output tensor (1, 521)
       var outputShape = interpreter.getOutputTensor(0).shape;
@@ -214,6 +221,8 @@ class _ProcessingPageState extends ConsumerState<ProcessingPage> {
 
   @override
   Widget build(BuildContext context) {
+    playerController?.preparePlayer(
+        path: ref.read(recordingProvider.notifier).filePath);
     return Scaffold(
       appBar: AppBar(
         title: const Text('Processing Audio'),
@@ -317,6 +326,46 @@ class _ProcessingPageState extends ConsumerState<ProcessingPage> {
                         Icons.check_circle_outline,
                         color: Colors.green[400],
                         size: 64,
+                      ),
+
+                      // audio spectrogram
+                      const SizedBox(height: 24),
+                      AudioFileWaveforms(
+                        size: const Size(400, 100),
+                        playerController: playerController,
+                      ),
+                      // button to play audio
+                      ElevatedButton(
+                        onPressed: () async {
+                          final filePath =
+                              ref.read(recordingProvider.notifier).filePath;
+                          if (filePath == null) return;
+
+                          if (playerController!.playerState.isPlaying) {
+                            playerController!.pausePlayer();
+                          } else {
+                            playerController!.startPlayer();
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF6246EA),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 32,
+                            vertical: 16,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                        ),
+                        child: Text(
+                          playerController!.playerState.isPlaying
+                              ? 'Pause Audio'
+                              : 'Play Audio',
+                          style: GoogleFonts.lexend(
+                            color: Colors.white,
+                            fontSize: 16,
+                          ),
+                        ),
                       ),
                       const SizedBox(height: 16),
                       Text(
