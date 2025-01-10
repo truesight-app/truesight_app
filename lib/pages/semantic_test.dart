@@ -20,16 +20,11 @@ class _SemanticTestPageState extends State<SemanticTestPage> {
   int currentPage = 0;
   late List<Widget> pages;
   TextEditingController _animalController = TextEditingController();
-  ValueNotifier<List<String>> animals = ValueNotifier([]);
+  List<String> animals = [];
 
   @override
   void initState() {
     super.initState();
-    pages = [
-      introPage(),
-      timerPage(),
-      resultsPage(),
-    ];
   }
 
   void startTimer() {
@@ -172,13 +167,11 @@ class _SemanticTestPageState extends State<SemanticTestPage> {
                           ),
                         ),
                         Text(
-                          '${val}',
+                          '$val',
                           style: TextStyle(
                             fontSize: 48,
                             fontWeight: FontWeight.bold,
-                            color: timeLeft.value > 10
-                                ? Colors.purple
-                                : Colors.red,
+                            color: val > 10 ? Colors.purple : Colors.red,
                           ),
                         ),
                       ],
@@ -198,17 +191,7 @@ class _SemanticTestPageState extends State<SemanticTestPage> {
                       fillColor: Colors.white,
                       prefixIcon: const Icon(Icons.pets),
                     ),
-                    onEditingComplete: () {
-                      if (_animalController.text.isNotEmpty) {
-                        animals.value.add(_animalController.text);
-                        setState(() {
-                          _animalController.clear();
-
-                          testFieldFocusNode
-                              .requestFocus(); // Focus on the text field again
-                        });
-                      }
-                    },
+                    onEditingComplete: () => _addAnimal(_animalController.text),
                   ),
                 ],
               ),
@@ -234,15 +217,12 @@ class _SemanticTestPageState extends State<SemanticTestPage> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  ValueListenableBuilder(
-                    valueListenable: animals,
-                    builder: (context, value, child) => Text(
-                      value.isEmpty
-                          ? "No animals listed yet"
-                          : value.join(", "),
-                      style: const TextStyle(fontSize: 16),
-                      textAlign: TextAlign.center,
-                    ),
+                  Text(
+                    animals.isEmpty
+                        ? "No animals listed yet"
+                        : animals.join(", "),
+                    style: const TextStyle(fontSize: 16),
+                    textAlign: TextAlign.center,
                   ),
                 ],
               ),
@@ -255,7 +235,7 @@ class _SemanticTestPageState extends State<SemanticTestPage> {
 
   Widget resultsPage() {
     return FutureBuilder(
-      future: evaluateAnimals(animals.value),
+      future: evaluateAnimals(animals),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Container(
@@ -306,7 +286,7 @@ class _SemanticTestPageState extends State<SemanticTestPage> {
                         ),
                         const SizedBox(height: 24),
                         Text(
-                          "You listed ${animals.value.length} animals:",
+                          "You listed ${animals..length} animals:",
                           style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -314,7 +294,7 @@ class _SemanticTestPageState extends State<SemanticTestPage> {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          animals.value.join(", "),
+                          animals.join(", "),
                           textAlign: TextAlign.center,
                           style: const TextStyle(fontSize: 16),
                         ),
@@ -331,7 +311,7 @@ class _SemanticTestPageState extends State<SemanticTestPage> {
                               started = false;
                               finished = false;
                               timeLeft.value = 45;
-                              animals.value.clear();
+                              animals.clear();
                             });
                             _controller.animateToPage(0,
                                 duration: const Duration(milliseconds: 500),
@@ -362,6 +342,16 @@ class _SemanticTestPageState extends State<SemanticTestPage> {
         }
       },
     );
+  }
+
+  void _addAnimal(String animal) {
+    if (animal.isNotEmpty) {
+      setState(() {
+        animals.add(animal);
+        _animalController.clear();
+      });
+      testFieldFocusNode.requestFocus();
+    }
   }
 
   Future<String> evaluateAnimals(List<String> animals) async {
@@ -411,7 +401,11 @@ Otherwise, indicate normal semantic correlation.
           });
         },
         controller: _controller,
-        children: pages,
+        children: [
+          introPage(),
+          timerPage(),
+          resultsPage(),
+        ],
       ),
     );
   }

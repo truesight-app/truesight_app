@@ -98,10 +98,6 @@ class _ProcessingPageState extends ConsumerState<ProcessingPage> {
       // save original audio path to file but in downloads too to see if that one is uncorrupted
       final dir = await getDownloadsDirectory();
 
-      final originalPath = '${dir!.path}/test.m4a';
-      final originalFile = File(originalPath);
-      await originalFile.writeAsBytes(await File(audioPath).readAsBytes());
-
       final wavPath = '${audioPath.replaceAll('.m4a', '')}_processed.wav';
       // save to device directort where we can access it
 
@@ -221,6 +217,7 @@ class _ProcessingPageState extends ConsumerState<ProcessingPage> {
 
   @override
   Widget build(BuildContext context) {
+    ref.watch(recordingProvider.notifier);
     playerController?.preparePlayer(
         path: ref.read(recordingProvider.notifier).filePath);
     return Scaffold(
