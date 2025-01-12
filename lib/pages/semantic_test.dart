@@ -215,39 +215,39 @@ class _SemanticTestPageState extends State<SemanticTestPage> {
             ),
           ),
           const SizedBox(height: 16),
-          Card(
-            elevation: 8,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(25),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Text(
-                    "Animals Listed:",
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.purple,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  ValueListenableBuilder(
-                    valueListenable: animals,
-                    builder: (context, value, child) => Text(
-                      value.isEmpty
-                          ? "No animals listed yet"
-                          : value.join(", "),
-                      style: const TextStyle(fontSize: 16),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
+          // Card(
+          //   elevation: 8,
+          //   shape: RoundedRectangleBorder(
+          //     borderRadius: BorderRadius.circular(25),
+          //   ),
+          //   child: Padding(
+          //     padding: const EdgeInsets.all(16.0),
+          //     child: Column(
+          //       mainAxisSize: MainAxisSize.min,
+          //       children: [
+          //         const Text(
+          //           "Animals Listed:",
+          //           style: TextStyle(
+          //             fontSize: 18,
+          //             fontWeight: FontWeight.bold,
+          //             color: Colors.purple,
+          //           ),
+          //         ),
+          //         const SizedBox(height: 8),
+          //         ValueListenableBuilder(
+          //           valueListenable: animals,
+          //           builder: (context, value, child) => Text(
+          //             value.isEmpty
+          //                 ? "No animals listed yet"
+          //                 : value.join(", "),
+          //             style: const TextStyle(fontSize: 16),
+          //             textAlign: TextAlign.center,
+          //           ),
+          //         ),
+          //       ],
+          //     ),
+          //   ),
+          // ),
         ],
       ),
     );
@@ -301,7 +301,7 @@ class _SemanticTestPageState extends State<SemanticTestPage> {
                           style: TextStyle(
                             fontSize: 28,
                             fontWeight: FontWeight.bold,
-                            color: Color.fromARGB(255, 200, 188, 202),
+                            color: Colors.purple,
                           ),
                         ),
                         const SizedBox(height: 24),
