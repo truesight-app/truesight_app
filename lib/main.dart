@@ -7,7 +7,7 @@ import 'package:truesight/providers/recordingProvider.dart';
 late var temporaryDirectory;
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  temporaryDirectory = await getTemporaryDirectory();
+  temporaryDirectory = await getDownloadsDirectory();
 
   runApp(ProviderScope(child: const MainApp()));
 }

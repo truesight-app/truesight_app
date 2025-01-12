@@ -53,8 +53,8 @@ class _RecordingPageState extends ConsumerState<RecordingPage> {
 
   Future<void> _initializeRecording() async {
     try {
-      final dir = await getTemporaryDirectory();
-      recordingPath = '${dir.path}/recording.m4a';
+      final dir = await getDownloadsDirectory();
+      recordingPath = '${dir!.path}/recording2.m4a';
 
       // Delete existing recording file
       if (File(recordingPath).existsSync()) {
@@ -451,6 +451,13 @@ class _RecordingPageState extends ConsumerState<RecordingPage> {
                             ),
                           );
 
+                          ref
+                              .read(recordingProvider.notifier)
+                              .setFilePath(recordingPath);
+
+                          widget.navigatorController.canProceed = true;
+                          isRecording = false;
+                          hasRecording = true;
                           Navigator.of(context).push(
                             MaterialPageRoute(
                               builder: (context) => const ProcessingPage(),
