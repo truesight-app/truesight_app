@@ -283,7 +283,7 @@ class _SemanticTestPageState extends State<SemanticTestPage> {
                           style: TextStyle(
                             fontSize: 28,
                             fontWeight: FontWeight.bold,
-                            color: Color.fromARGB(255, 200, 188, 202),
+                            color: Colors.purple,
                           ),
                         ),
                         const SizedBox(height: 24),
