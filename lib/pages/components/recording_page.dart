@@ -2,12 +2,12 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:truesight/pages/components/processing_page.dart';
-import 'package:truesight/providers/recordingProvider.dart';
-import 'package:truesight/widgets/page_navigator.dart';
+import 'package:mindbalance/pages/components/processing_page.dart';
+import 'package:mindbalance/providers/recordingProvider.dart';
+import 'package:mindbalance/widgets/page_navigator.dart';
 import 'package:audio_waveforms/audio_waveforms.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:truesight/main.dart';
+import 'package:mindbalance/main.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class RecordingPage extends ConsumerStatefulWidget {

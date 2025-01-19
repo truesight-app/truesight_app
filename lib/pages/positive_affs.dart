@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:truesight/functions/gemini.dart';
-import 'package:truesight/pages/components/recording_page.dart';
-import 'package:truesight/widgets/page_navigator.dart';
+import 'package:mindbalance/functions/gemini.dart';
+import 'package:mindbalance/pages/components/recording_page.dart';
+import 'package:mindbalance/widgets/page_navigator.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -64,7 +64,6 @@ class _PositiveAffsState extends State<PositiveAffs> {
               border: Border.all(color: Colors.grey[200]!),
             ),
             child: TextField(
-
               maxLines: 5,
               onChanged: (value) {
                 setState(() {});

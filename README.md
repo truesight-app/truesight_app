@@ -1,3 +1,3 @@
-# truesight
+# mindbalance
 
 A new Flutter project.

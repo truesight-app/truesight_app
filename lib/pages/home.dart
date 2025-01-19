@@ -3,12 +3,12 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:truesight/pages/data_collection.dart';
-import 'package:truesight/pages/positive_affs.dart';
+import 'package:mindbalance/pages/data_collection.dart';
+import 'package:mindbalance/pages/positive_affs.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:truesight/pages/psychoeducation_page.dart';
-import 'package:truesight/pages/semantic_test.dart';
-import 'package:truesight/providers/formStateProvider.dart';
+import 'package:mindbalance/pages/psychoeducation_page.dart';
+import 'package:mindbalance/pages/semantic_test.dart';
+import 'package:mindbalance/providers/formStateProvider.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -55,8 +55,7 @@ class _HomePageState extends State<HomePage> {
               context,
               "Category Fluency Test",
               const Color.fromARGB(255, 184, 221, 255),
-              const SemanticTestPage()
-              ,
+              const SemanticTestPage(),
               110,
             ),
             _buildDashboardButton(

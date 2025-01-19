@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:truesight/main.dart';
+import 'package:mindbalance/main.dart';
 
 class RecordingState {
   final String filePath; // assume we haven't recorded anything yet

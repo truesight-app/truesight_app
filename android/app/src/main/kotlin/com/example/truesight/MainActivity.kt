@@ -1,4 +1,4 @@
-package com.example.truesight
+package com.example.mindbalance
 
 import io.flutter.embedding.android.FlutterActivity
 

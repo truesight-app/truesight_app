@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:truesight/pages/home.dart';
-import 'package:truesight/providers/recordingProvider.dart';
+import 'package:mindbalance/pages/home.dart';
+import 'package:mindbalance/providers/recordingProvider.dart';
 
 late var temporaryDirectory;
 void main() async {
@@ -19,7 +19,7 @@ class MainApp extends ConsumerWidget {
     ref.read(recordingProvider.notifier).init();
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: "TrueSight",
+      title: "mindbalance",
       theme: ThemeData(),
       home: HomePage(),
     );

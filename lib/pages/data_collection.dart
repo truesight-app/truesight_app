@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:truesight/pages/components/processing_page.dart';
-import 'package:truesight/pages/components/recording_page.dart';
-import 'package:truesight/providers/formStateProvider.dart';
-import 'package:truesight/widgets/page_navigator.dart';
+import 'package:mindbalance/pages/components/processing_page.dart';
+import 'package:mindbalance/pages/components/recording_page.dart';
+import 'package:mindbalance/providers/formStateProvider.dart';
+import 'package:mindbalance/widgets/page_navigator.dart';
 
 class DataCollection extends ConsumerStatefulWidget {
   const DataCollection({super.key});
