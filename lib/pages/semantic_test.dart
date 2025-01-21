@@ -9,6 +9,24 @@ import 'package:google_generative_ai/google_generative_ai.dart';
 import 'dart:async';
 import 'package:onnxruntime/onnxruntime.dart';
 
+Color calculate_scale(double data) {
+  if (data < 1.0) {
+    return Colors.red;
+  } else if (data < 2.0) {
+    return Colors.orange;
+  } else if (data < 3.0) {
+    return Colors.yellow;
+  } else if (data < 4.0) {
+    return Colors.lightGreen;
+  } else if (data < 5.0) {
+    return Colors.green;
+  } else if (data < 6.0) {
+    return Colors.blue;
+  } else {
+    return Colors.purple;
+  }
+}
+
 class SemanticTestPage extends StatefulWidget {
   const SemanticTestPage({super.key});
 
@@ -161,7 +179,6 @@ class _SemanticTestPageState extends State<SemanticTestPage> {
     final List<String> animalsCopy = List.from(animals);
     //iterate in pairs
     for (int i = 0; i < animalsCopy.length; i += 2) {
-      print(i);
       String animal1 = animalsCopy[i];
       String animal2 = animalsCopy[i + 1];
       var a1 = encodeAnimal(animal1);
@@ -402,8 +419,7 @@ class _SemanticTestPageState extends State<SemanticTestPage> {
                           minHeight: 20,
                           backgroundColor: Colors.grey.shade200,
                           valueColor: AlwaysStoppedAnimation<Color>(
-                            Colors.purple,
-                          ),
+                              calculate_scale(snapshot.data as double)),
                         ),
                         const SizedBox(height: 32),
                         ElevatedButton(
