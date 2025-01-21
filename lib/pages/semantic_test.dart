@@ -1,8 +1,13 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
 import 'dart:async';
+import 'package:onnxruntime/onnxruntime.dart';
 
 class SemanticTestPage extends StatefulWidget {
   const SemanticTestPage({super.key});
@@ -23,10 +28,21 @@ class _SemanticTestPageState extends State<SemanticTestPage> {
   late List<Widget> pages;
   TextEditingController _animalController = TextEditingController();
   List<String> animals = [];
+  late Map<String, int> vocab;
 
   @override
   void initState() {
     super.initState();
+    loadVocab();
+  }
+
+  Future<void> loadVocab() async {
+    final String jsonString = await rootBundle.loadString('assets/vocab.json');
+    vocab = Map<String, int>.from(json.decode(jsonString));
+  }
+
+  int? encodeAnimal(String animal) {
+    return vocab[animal] ?? vocab['<UNK>'];
   }
 
   void startTimer() {
@@ -37,9 +53,8 @@ class _SemanticTestPageState extends State<SemanticTestPage> {
         _timer?.cancel();
         if (started && !finished) {
           finished = true;
-          _controller.animateToPage(2,
-              duration: const Duration(milliseconds: 500),
-              curve: Curves.easeInOut);
+          Navigator.of(context)
+              .push(MaterialPageRoute(builder: (context) => resultsPage()));
         }
       }
     });
@@ -126,6 +141,65 @@ class _SemanticTestPageState extends State<SemanticTestPage> {
         ),
       ),
     );
+  }
+
+  Future<double> evaluateAnimals() async {
+    double val = 0;
+    OrtEnv.instance.init();
+    final sessionOptions = OrtSessionOptions();
+    const assetFileName = 'assets/aninet.onnx';
+    final rawAssetFile = await rootBundle.load(assetFileName);
+    final bytes = rawAssetFile.buffer.asUint8List();
+    final session = OrtSession.fromBuffer(bytes, sessionOptions!);
+
+    int batch_size = 32;
+
+    if (animals.length % 2 != 0) {
+      animals.removeLast();
+    }
+
+    final List<String> animalsCopy = List.from(animals);
+    //iterate in pairs
+    for (int i = 0; i < animalsCopy.length; i += 2) {
+      print(i);
+      String animal1 = animalsCopy[i];
+      String animal2 = animalsCopy[i + 1];
+      var a1 = encodeAnimal(animal1);
+      var a2 = encodeAnimal(animal2);
+
+      // Prepare the input tensors
+      final animal1Data = [a1]; // Single value for animal1
+      final animal2Data = [a2]; // Single value for animal2
+      final shape = [1, 1]; // Shape: [batch_size, 1]
+
+      // Create OrtValueTensor for both inputs
+      final animal1Ort =
+          OrtValueTensor.createTensorWithDataList(animal1Data, shape);
+      final animal2Ort =
+          OrtValueTensor.createTensorWithDataList(animal2Data, shape);
+
+      // Create inputs map
+      final inputs = {'animal1': animal1Ort, 'animal2': animal2Ort};
+
+      final runOptions = OrtRunOptions();
+      final output = await session?.runAsync(runOptions, inputs);
+      final scale_min = 1.0;
+      final scale_max = 7.0;
+      output?.forEach((element) {
+        // Assuming the output is a similarity score
+        var data = (element!.value as List<List<double>>)[0][0];
+        var scaled_data = data * (scale_max - scale_min) + scale_min;
+        val += scaled_data;
+
+        element?.release();
+      });
+    }
+
+    val = val / (animalsCopy.length / 2);
+    sessionOptions.release();
+    session.release();
+
+    return val;
   }
 
   Widget timerPage() {
@@ -237,7 +311,7 @@ class _SemanticTestPageState extends State<SemanticTestPage> {
 
   Widget resultsPage() {
     return FutureBuilder(
-      future: evaluateAnimals(animals),
+      future: evaluateAnimals(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Container(
@@ -288,15 +362,47 @@ class _SemanticTestPageState extends State<SemanticTestPage> {
                         ),
                         const SizedBox(height: 24),
                         Text(
+                          "Animals Listed:",
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
                           animals.join(", "),
                           textAlign: TextAlign.center,
                           style: const TextStyle(fontSize: 16),
                         ),
                         const SizedBox(height: 24),
-                        MarkdownBody(
-                          data: snapshot.data.toString(),
-                          styleSheet: MarkdownStyleSheet(
-                            p: GoogleFonts.lexend(),
+                        Text(
+                          "Average Semantic Similarity Score:",
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          snapshot.data.toString(),
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.purple,
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        LinearProgressIndicator(
+                          value: (snapshot.data as double) / 7.0,
+                          minHeight: 20,
+                          backgroundColor: Colors.grey.shade200,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Colors.purple,
                           ),
                         ),
                         const SizedBox(height: 32),
@@ -308,6 +414,7 @@ class _SemanticTestPageState extends State<SemanticTestPage> {
                               timeLeft.value = 45;
                               animals.clear();
                             });
+                            Navigator.of(context).pop();
                             _controller.animateToPage(0,
                                 duration: const Duration(milliseconds: 500),
                                 curve: Curves.easeInOut);
@@ -349,69 +456,6 @@ class _SemanticTestPageState extends State<SemanticTestPage> {
     }
   }
 
-  Future<String> evaluateAnimals(List<String> animals) async {
-    try {
-      final model = GenerativeModel(
-        model: 'gemini-pro',
-        apiKey: 'AIzaSyBz8SnJ4nBLT7WsmEw8PN0fZU60WD-Mo4o',
-      );
-
-      const prompt = '''
-You are an expert in cognitive assessment specializing in semantic fluency analysis. Analyze these animals for semantic clustering and switching patterns:
-
-Perform the following analysis:
-
-1. Identify semantic clusters (groups of related animals), such as:
-   - Farm animals
-   - Wild animals
-   - Pets
-   - Marine animals
-   - Birds
-   - Insects
-   - Geographic regions
-   - Habitats
-
-2. Calculate:
-   - Number of distinct clusters
-   - Average cluster size
-   - Number of switches between clusters
-   - Any repetitions or invalid entries
-
-3. Evaluate response patterns:
-   - Are animals within each cluster semantically related?
-   - Are transitions between clusters logical?
-   - Is there evidence of organized thinking in the clustering?
-
-4. Provide one of these assessments based on specific criteria:
-
-A. If the response shows these characteristics:
-   - Multiple clear semantic clusters (3 or more)
-   - Logical transitions between clusters
-   - Related animals within clusters
-   - Few or no repetitions
-   Return: "Normal semantic pattern detected. Your responses show organized thinking with clear semantic clustering and logical transitions between animal categories."
-
-B. If the response shows these characteristics:
-   - Few or no clear semantic clusters (0-2)
-   - Random or unrelated transitions
-   - Unrelated animals within attempted clusters
-   - Multiple repetitions or invalid entries
-   Return: "Category fluency test research indicates that you may have problems organizing your thoughts semantically. Research indicates that there is a correlation between people having this issue and schizophrenia.
-
-Source: Nour, M. M., McNamee, D., Liu, Y., & Dolan, R. J. (2023). Trajectories through semantic spaces in schizophrenia and the relationship to ripple bursts. Proceedings of the National Academy of Sciences of the United States of America, 120(42). https://doi.org/10.1073/pnas.2305290120"
-
-Provide a detailed breakdown of your analysis before stating the final assessment.
-''';
-
-      final content = [Content.text(prompt)];
-      final response = await model.generateContent(content);
-
-      return response.text ?? 'No evaluation generated';
-    } catch (e) {
-      throw Exception('Failed to evaluate animals: $e');
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -433,7 +477,6 @@ Provide a detailed breakdown of your analysis before stating the final assessmen
         children: [
           introPage(),
           timerPage(),
-          resultsPage(),
         ],
       ),
     );
