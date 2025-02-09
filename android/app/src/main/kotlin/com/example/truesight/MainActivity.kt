@@ -1,4 +1,4 @@
-package com.example.mindbalance
+package com.codingminds.mindbalance
 
 import io.flutter.embedding.android.FlutterActivity
 
