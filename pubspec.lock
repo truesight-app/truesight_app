@@ -267,10 +267,11 @@ packages:
   onnxruntime:
     dependency: "direct main"
     description:
-      name: onnxruntime
-      sha256: e77ec05acafc135cc5fe7bcdf11b101b39f06513c9d5e9fa02cb1929f6bac72a
-      url: "https://pub.dev"
-    source: hosted
+      path: "."
+      ref: HEAD
+      resolved-ref: "9352684bff4e3a079891c02be5382973ba278895"
+      url: "https://github.com/Skynse/onnxruntime_flutter_better.git"
+    source: git
     version: "1.4.1"
   path:
     dependency: transitive
