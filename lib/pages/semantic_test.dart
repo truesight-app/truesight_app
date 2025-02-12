@@ -38,8 +38,8 @@ class SemanticTestPage extends StatefulWidget {
 class _SemanticTestPageState extends State<SemanticTestPage> {
   bool started = false;
   bool finished = false; // finished the entire analysis
-  // int timeLeft = 13;
-  ValueNotifier<int> timeLeft = ValueNotifier(13);
+  // int timeLeft = 45;
+  ValueNotifier<int> timeLeft = ValueNotifier(45);
   Timer? _timer;
   FocusNode testFieldFocusNode = FocusNode();
   final PageController _controller = PageController(initialPage: 0);
@@ -124,7 +124,7 @@ class _SemanticTestPageState extends State<SemanticTestPage> {
                 ),
                 const SizedBox(height: 16),
                 const Text(
-                  "List as many animals as possible in 13 seconds!",
+                  "List as many animals as possible in 45 seconds!",
                   textAlign: TextAlign.center,
                   style: TextStyle(fontSize: 18, color: Colors.black87),
                 ),
@@ -132,7 +132,7 @@ class _SemanticTestPageState extends State<SemanticTestPage> {
                 ElevatedButton(
                   onPressed: () {
                     started = true;
-                    timeLeft.value = 13;
+                    timeLeft.value = 45;
                     startTimer();
 
                     _controller.animateToPage(1,
@@ -292,7 +292,7 @@ class _SemanticTestPageState extends State<SemanticTestPage> {
                           width: 120,
                           height: 120,
                           child: CircularProgressIndicator(
-                            value: val / 13,
+                            value: val / 45,
                             strokeWidth: 8,
                             backgroundColor: Colors.grey.shade200,
                             valueColor: AlwaysStoppedAnimation<Color>(
@@ -467,7 +467,7 @@ class _SemanticTestPageState extends State<SemanticTestPage> {
                             setState(() {
                               started = false;
                               finished = false;
-                              timeLeft.value = 13;
+                              timeLeft.value = 45;
                               animals.clear();
                             });
                             Navigator.of(context).pop();
