@@ -7,7 +7,8 @@ import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
 import 'dart:async';
-import 'package:onnxruntime/onnxruntime.dart';
+
+import 'package:tflite_flutter/tflite_flutter.dart';
 
 Color calculate_scale(double data) {
   if (data < 1.0) {
@@ -37,8 +38,8 @@ class SemanticTestPage extends StatefulWidget {
 class _SemanticTestPageState extends State<SemanticTestPage> {
   bool started = false;
   bool finished = false; // finished the entire analysis
-  // int timeLeft = 45;
-  ValueNotifier<int> timeLeft = ValueNotifier(45);
+  // int timeLeft = 13;
+  ValueNotifier<int> timeLeft = ValueNotifier(13);
   Timer? _timer;
   FocusNode testFieldFocusNode = FocusNode();
   final PageController _controller = PageController(initialPage: 0);
@@ -123,7 +124,7 @@ class _SemanticTestPageState extends State<SemanticTestPage> {
                 ),
                 const SizedBox(height: 16),
                 const Text(
-                  "List as many animals as possible in 45 seconds!",
+                  "List as many animals as possible in 13 seconds!",
                   textAlign: TextAlign.center,
                   style: TextStyle(fontSize: 18, color: Colors.black87),
                 ),
@@ -131,7 +132,7 @@ class _SemanticTestPageState extends State<SemanticTestPage> {
                 ElevatedButton(
                   onPressed: () {
                     started = true;
-                    timeLeft.value = 45;
+                    timeLeft.value = 13;
                     startTimer();
 
                     _controller.animateToPage(1,
@@ -161,62 +162,102 @@ class _SemanticTestPageState extends State<SemanticTestPage> {
     );
   }
 
-  Future<double> evaluateAnimals() async {
-    double val = 0;
-    OrtEnv.instance.init();
-    final sessionOptions = OrtSessionOptions();
-    const assetFileName = 'assets/aninet.onnx';
-    final rawAssetFile = await rootBundle.load(assetFileName);
-    final bytes = rawAssetFile.buffer.asUint8List();
-    final session = OrtSession.fromBuffer(bytes, sessionOptions!);
+  // Future<double> evaluateAnimals() async {
+  //   double val = 0;
+  //   OrtEnv.instance.init();
+  //   final sessionOptions = OrtSessionOptions();
+  //   const assetFileName = 'assets/aninet.onnx';
+  //   final rawAssetFile = await rootBundle.load(assetFileName);
+  //   final bytes = rawAssetFile.buffer.asUint8List();
+  //   final session = OrtSession.fromBuffer(bytes, sessionOptions!);
 
-    int batch_size = 32;
+  //   int batch_size = 32;
+
+  //   if (animals.length % 2 != 0) {
+  //     animals.removeLast();
+  //   }
+
+  //   final List<String> animalsCopy = List.from(animals);
+  //   //iterate in pairs
+  //   for (int i = 0; i < animalsCopy.length; i += 2) {
+  //     String animal1 = animalsCopy[i];
+  //     String animal2 = animalsCopy[i + 1];
+  //     var a1 = encodeAnimal(animal1);
+  //     var a2 = encodeAnimal(animal2);
+
+  //     // Prepare the input tensors
+  //     final animal1Data = [a1]; // Single value for animal1
+  //     final animal2Data = [a2]; // Single value for animal2
+  //     final shape = [1, 1]; // Shape: [batch_size, 1]
+
+  //     // Create OrtValueTensor for both inputs
+  //     final animal1Ort =
+  //         OrtValueTensor.createTensorWithDataList(animal1Data, shape);
+  //     final animal2Ort =
+  //         OrtValueTensor.createTensorWithDataList(animal2Data, shape);
+
+  //     // Create inputs map
+  //     final inputs = {'animal1': animal1Ort, 'animal2': animal2Ort};
+
+  //     final runOptions = OrtRunOptions();
+  //     final output = await session?.runAsync(runOptions, inputs);
+  //     final scale_min = 1.0;
+  //     final scale_max = 7.0;
+  //     output?.forEach((element) {
+  //       // Assuming the output is a similarity score
+  //       var data = (element!.value as List<List<double>>)[0][0];
+  //       var scaled_data = data * (scale_max - scale_min) + scale_min;
+  //       val += scaled_data;
+
+  //       element?.release();
+  //     });
+  //   }
+
+  //   val = val / (animalsCopy.length / 2);
+  //   sessionOptions.release();
+  //   session.release();
+
+  //   return val;
+  // }
+  Future<double> evaluateAnimals() async {
+    final interpreter = await Interpreter.fromAsset('assets/aninet.tflite');
+    double val = 0;
 
     if (animals.length % 2 != 0) {
       animals.removeLast();
     }
 
-    final List<String> animalsCopy = List.from(animals);
-    //iterate in pairs
-    for (int i = 0; i < animalsCopy.length; i += 2) {
-      String animal1 = animalsCopy[i];
-      String animal2 = animalsCopy[i + 1];
-      var a1 = encodeAnimal(animal1);
-      var a2 = encodeAnimal(animal2);
+    print('Input shape: ${interpreter.getInputTensor(0).shape}');
+    print('Output shape: ${interpreter.getOutputTensor(0).shape}');
 
-      // Prepare the input tensors
-      final animal1Data = [a1]; // Single value for animal1
-      final animal2Data = [a2]; // Single value for animal2
-      final shape = [1, 1]; // Shape: [batch_size, 1]
+    for (int i = 0; i < animals.length; i += 2) {
+      String animal1 = animals[i];
+      String animal2 = animals[i + 1];
+      var a1 = encodeAnimal(animal1)!;
+      var a2 = encodeAnimal(animal2)!;
 
-      // Create OrtValueTensor for both inputs
-      final animal1Ort =
-          OrtValueTensor.createTensorWithDataList(animal1Data, shape);
-      final animal2Ort =
-          OrtValueTensor.createTensorWithDataList(animal2Data, shape);
+      // Create input tensors
+      final input1 = List.filled(1, List.filled(1, a1));
+      final input2 = List.filled(1, List.filled(1, a2));
 
-      // Create inputs map
-      final inputs = {'animal1': animal1Ort, 'animal2': animal2Ort};
+      // Create output buffer
+      var outputBuffer = List.filled(1, List<double>.filled(1, 0));
 
-      final runOptions = OrtRunOptions();
-      final output = await session?.runAsync(runOptions, inputs);
-      final scale_min = 1.0;
-      final scale_max = 7.0;
-      output?.forEach((element) {
-        // Assuming the output is a similarity score
-        var data = (element!.value as List<List<double>>)[0][0];
-        var scaled_data = data * (scale_max - scale_min) + scale_min;
-        val += scaled_data;
+      // Run model
+      interpreter.runForMultipleInputs([input1, input2], {0: outputBuffer});
 
-        element?.release();
-      });
+      // Scale the output from [0,1] back to [1,7] range
+      double scaled = outputBuffer[0][0] * 6.0 + 1.0;
+      print('Pair ${animal1}-${animal2} score: $scaled');
+      val += scaled;
     }
 
-    val = val / (animalsCopy.length / 2);
-    sessionOptions.release();
-    session.release();
+    // Calculate average
+    final result = val / (animals.length / 2);
 
-    return val;
+    interpreter.close();
+    print('Final average: $result');
+    return result;
   }
 
   Widget timerPage() {
@@ -251,7 +292,7 @@ class _SemanticTestPageState extends State<SemanticTestPage> {
                           width: 120,
                           height: 120,
                           child: CircularProgressIndicator(
-                            value: val / 45,
+                            value: val / 13,
                             strokeWidth: 8,
                             backgroundColor: Colors.grey.shade200,
                             valueColor: AlwaysStoppedAnimation<Color>(
@@ -345,9 +386,8 @@ class _SemanticTestPageState extends State<SemanticTestPage> {
               ),
             ),
           );
-        } else if (snapshot.hasError) {
-          return Center(child: Text('Error: ${snapshot.error}'));
-        } else {
+        }
+        {
           return Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
@@ -427,7 +467,7 @@ class _SemanticTestPageState extends State<SemanticTestPage> {
                             setState(() {
                               started = false;
                               finished = false;
-                              timeLeft.value = 45;
+                              timeLeft.value = 13;
                               animals.clear();
                             });
                             Navigator.of(context).pop();

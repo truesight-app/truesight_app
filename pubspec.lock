@@ -304,15 +304,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.15.0"
-  onnxruntime:
-    dependency: "direct main"
-    description:
-      path: "."
-      ref: HEAD
-      resolved-ref: "9352684bff4e3a079891c02be5382973ba278895"
-      url: "https://github.com/Skynse/onnxruntime_flutter_better.git"
-    source: git
-    version: "1.4.1"
   path:
     dependency: transitive
     description:
