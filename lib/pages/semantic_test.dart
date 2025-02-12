@@ -231,8 +231,8 @@ class _SemanticTestPageState extends State<SemanticTestPage> {
     print('Output shape: ${interpreter.getOutputTensor(0).shape}');
 
     for (int i = 0; i < animals.length; i += 2) {
-      String animal1 = animals[i];
-      String animal2 = animals[i + 1];
+      String animal1 = animals[i].trim();
+      String animal2 = animals[i + 1].trim();
       var a1 = encodeAnimal(animal1)!;
       var a2 = encodeAnimal(animal2)!;
 
