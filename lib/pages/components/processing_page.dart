@@ -1,18 +1,13 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:tflite_flutter/tflite_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mindbalance/functions/gemini.dart';
-import 'package:mindbalance/pages/report.dart';
-import 'package:mindbalance/providers/formStateProvider.dart';
+import 'package:mindbalance/services/api_service.dart';
 import 'package:mindbalance/providers/recordingProvider.dart';
-import 'package:audio_waveforms/audio_waveforms.dart';
-import 'dart:io';
-import 'package:path_provider/path_provider.dart';
-import 'dart:typed_data';
-import 'package:ffmpeg_kit_flutter/ffmpeg_kit.dart';
+import 'package:mindbalance/providers/formStateProvider.dart';
+import 'package:mindbalance/pages/report.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:wav/wav.dart';
 
 class ProcessingPage extends ConsumerStatefulWidget {
   const ProcessingPage({super.key});
@@ -25,123 +20,12 @@ class _ProcessingPageState extends ConsumerState<ProcessingPage> {
   bool isProcessing = false;
   String? predictionResult;
   String? errorMessage;
-  String? debugMessage;
-  late PlayerController playerController;
   List<Map<String, dynamic>> predictions = [];
 
   @override
   void initState() {
     super.initState();
-    _initializeProcessing();
-  }
-
-  Future<void> _initializeProcessing() async {
-    try {
-      playerController = PlayerController();
-
-      await Future.delayed(const Duration(milliseconds: 500));
-      if (mounted) {
-        _processRecording();
-      }
-    } catch (e) {
-      _updateDebug('Init error: $e');
-    }
-  }
-
-  void _updateDebug(String message) {
-    if (mounted) {
-      setState(() {
-        debugMessage = message;
-      });
-    }
-  }
-
-  Future<Map<int, String>> loadLabels() async {
-    Map<int, String> labels = {};
-    try {
-      final file = await rootBundle.loadString('assets/labels.txt');
-      final lines = file.split('\n');
-      for (var line in lines) {
-        // Skip empty lines
-        if (line.trim().isEmpty) continue;
-
-        // Split only on the first space to keep the rest of the label intact
-        final firstSpace = line.indexOf(' ');
-        if (firstSpace == -1) continue;
-
-        final idxStr = line.substring(0, firstSpace).trim();
-        final label = line
-            .substring(firstSpace + 1)
-            .trim()
-            // Remove any quotes from the label
-            .replaceAll('"', '');
-
-        try {
-          final idx = int.parse(idxStr);
-          labels[idx] = label;
-        } catch (e) {
-          print('Error parsing index: $idxStr');
-          continue;
-        }
-      }
-    } catch (e) {
-      _updateDebug('Error loading labels: $e');
-    }
-    return labels;
-  }
-
-  Future<List<double>> preprocessAudio(String audioPath) async {
-    try {
-      _updateDebug('Converting audio format...');
-
-      // Convert to WAV with correct parameters for YAMNet
-      // save original audio path to file but in downloads too to see if that one is uncorrupted
-      final dir = await getDownloadsDirectory();
-
-      final wavPath = '${audioPath.replaceAll('.m4a', '')}_processed.wav';
-      // save to device directort where we can access it
-
-      final outputPath = '${dir!.path}/test4.wav';
-      print(outputPath);
-
-      await FFmpegKit.execute(
-          '-i $audioPath -acodec pcm_s16le -ar 16000 -ac 1 $wavPath'); // Ensure correct spec
-
-      final wavFile = File(wavPath);
-      if (!await wavFile.exists()) {
-        throw Exception('WAV conversion failed');
-      }
-
-      final bytes = await wavFile.readAsBytes();
-      List<double> samples = [];
-
-      // Skip WAV header (44 bytes) and convert to mono float32
-      for (int i = 44; i < bytes.length - 1; i += 2) {
-        int sample = bytes[i] + (bytes[i + 1] << 8);
-        if (sample > 32767) sample -= 65536;
-        samples.add(sample / 32768.0);
-      }
-
-      // YAMNet expects 0.975 seconds of audio (16000 * 0.975 = 15600 samples)
-      if (samples.length > 15600) {
-        samples = samples.sublist(0, 15600);
-      } else if (samples.length < 15600) {
-        samples.addAll(List.filled(15600 - samples.length, 0.0));
-      }
-
-      // convert trimmed samples back to audio and save to downloads to see if it works
-      final outputFile = File(outputPath);
-      final outputBytes = Uint8List.fromList(samples
-          .map((sample) => (sample * 32767).toInt())
-          .expand((sample) => [sample & 0xFF, (sample >> 8) & 0xFF])
-          .toList());
-      await outputFile.writeAsBytes(outputBytes);
-
-      return samples;
-    } catch (e) {
-      _updateDebug('Preprocessing error: $e');
-      rethrow;
-    }
+    _processRecording();
   }
 
   Future<void> _processRecording() async {
@@ -158,53 +42,28 @@ class _ProcessingPageState extends ConsumerState<ProcessingPage> {
       final filePath = ref.read(recordingProvider.notifier).filePath;
       if (filePath == null) throw Exception('No recording found');
 
-      final labels = await loadLabels();
-      final samples = await preprocessAudio(filePath);
-
-      // Initialize YAMNet
-      final interpreter = await Interpreter.fromAsset('assets/yam.tflite');
-      final input = [
-        samples.map((e) => [e]).toList()
-      ]; // Ensure [15600, 1] shape
-
-      // Prepare output tensor (1, 521)
-      var outputShape = interpreter.getOutputTensor(0).shape;
-      var output = List.generate(
-          outputShape[0], (_) => List<double>.filled(outputShape[1], 0.0));
-
-      // Run inference
-      interpreter.run(input, output);
-
-      // Process top predictions
-      final scores = output[0];
-      final sortedIndices = List.generate(scores.length, (i) => i)
-        ..sort((a, b) => scores[b].compareTo(scores[a]));
-
-      // Get top 5 predictions
-      predictions = sortedIndices.take(5).map((index) {
-        return {
-          'label': labels[index] ?? 'Unknown',
-          'confidence': scores[index] * 100,
-        };
-      }).toList();
-
-      // all 5 predictions as a string
-      String preds = '';
-      for (var pred in predictions) {
-        preds +=
-            '${pred['label']} (${pred['confidence'].toStringAsFixed(1)}%), ';
-      }
-
-      ref.read(formStateProvider.notifier).setTranscribedAudio(preds);
+      // Send to server for analysis
+      final result = await ApiService.analyzeAudio(filePath);
+      predictions =
+          List<Map<String, dynamic>>.from(result['predictions'] ?? []);
 
       if (mounted) {
         setState(() {
-          predictionResult = predictions.first['label'];
+          predictionResult =
+              predictions.isNotEmpty ? predictions.first['label'] : null;
           isProcessing = false;
         });
-      }
 
-      interpreter.close();
+        if (predictions.isNotEmpty) {
+          final predictionText = predictions
+              .map((p) =>
+                  '${p['label']} (${p['confidence'].toStringAsFixed(1)}%)')
+              .join(', ');
+          ref
+              .read(formStateProvider.notifier)
+              .setTranscribedAudio(predictionText);
+        }
+      }
     } catch (e) {
       if (mounted) {
         setState(() {
@@ -217,21 +76,30 @@ class _ProcessingPageState extends ConsumerState<ProcessingPage> {
 
   @override
   Widget build(BuildContext context) {
-    ref.watch(recordingProvider.notifier);
-    playerController?.preparePlayer(
-        path: ref.read(recordingProvider.notifier).filePath);
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Processing Audio'),
-      ),
       backgroundColor: const Color(0xFFF7F9FC),
+      appBar: AppBar(
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new, color: Color(0xFF2D3142)),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Text(
+          'Analysis',
+          style: GoogleFonts.lexend(
+            color: const Color(0xFF2D3142),
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(24.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Main Card
               Container(
                 decoration: BoxDecoration(
                   color: Colors.white,
@@ -324,55 +192,6 @@ class _ProcessingPageState extends ConsumerState<ProcessingPage> {
                         color: Colors.green[400],
                         size: 64,
                       ),
-
-                      // audio spectrogram
-                      const SizedBox(height: 24),
-                      AudioFileWaveforms(
-                        size: const Size(400, 100),
-                        playerController: playerController,
-                      ),
-                      // button to play audio
-                      ElevatedButton(
-                        onPressed: () async {
-                          final filePath =
-                              ref.read(recordingProvider.notifier).filePath;
-                          if (filePath == null) return;
-
-                          if (playerController!.playerState.isPlaying) {
-                            playerController!.pausePlayer();
-                          } else {
-                            playerController!.startPlayer();
-                          }
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF6246EA),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 32,
-                            vertical: 16,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(30),
-                          ),
-                        ),
-                        child: Text(
-                          playerController!.playerState.isPlaying
-                              ? 'Pause Audio'
-                              : 'Play Audio',
-                          style: GoogleFonts.lexend(
-                            color: Colors.white,
-                            fontSize: 16,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'Analysis Complete',
-                        style: GoogleFonts.lexend(
-                          fontSize: 24,
-                          fontWeight: FontWeight.w600,
-                          color: const Color(0xFF2D3142),
-                        ),
-                      ),
                       const SizedBox(height: 32),
                       ...predictions
                           .map((pred) => Container(
@@ -421,46 +240,24 @@ class _ProcessingPageState extends ConsumerState<ProcessingPage> {
                       ElevatedButton(
                         onPressed: _processRecording,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF6246EA),
+                          backgroundColor: Colors.white,
+                          foregroundColor: const Color(0xFF6246EA),
                           padding: const EdgeInsets.symmetric(
                             horizontal: 32,
                             vertical: 16,
                           ),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(30),
+                            side: const BorderSide(color: Color(0xFF6246EA)),
                           ),
                         ),
                         child: Text(
                           'Analyze Again',
                           style: GoogleFonts.lexend(
-                            color: Colors.white,
                             fontSize: 16,
                           ),
                         ),
                       ),
-                      ElevatedButton(
-                          onPressed: () async {
-                            final audioDescription =
-                                ref.read(formStateProvider).audioDescription;
-
-                            final transcription =
-                                ref.read(formStateProvider).transcribedAudio;
-
-                            final response =
-                                await compareTranscriptionAndDescription(
-                                    transcription, audioDescription);
-
-                            ref
-                                .read(formStateProvider.notifier)
-                                .setLLMResponse(response!);
-
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (context) => const ReportPage(),
-                              ),
-                            );
-                          },
-                          child: Text("Generate Report"))
                     ],
                   ],
                 ),
@@ -469,6 +266,43 @@ class _ProcessingPageState extends ConsumerState<ProcessingPage> {
           ),
         ),
       ),
+      bottomNavigationBar: predictions.isNotEmpty
+          ? Padding(
+              padding: const EdgeInsets.all(20),
+              child: ElevatedButton(
+                onPressed: () async {
+                  final audioDescription =
+                      ref.read(formStateProvider).audioDescription;
+                  final transcription =
+                      ref.read(formStateProvider).transcribedAudio;
+                  final response = await compareTranscriptionAndDescription(
+                      transcription, audioDescription);
+                  ref
+                      .read(formStateProvider.notifier)
+                      .setLLMResponse(response!);
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const ReportPage(),
+                    ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF6246EA),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                ),
+                child: Text(
+                  'Generate Report',
+                  style: GoogleFonts.lexend(
+                    color: Colors.white,
+                    fontSize: 16,
+                  ),
+                ),
+              ),
+            )
+          : null,
     );
   }
 }

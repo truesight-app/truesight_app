@@ -1,0 +1,2 @@
+C:/Users/austi/projects/truesight_app/android/app/.cxx/Debug/e2i4c3n1/x86/CMakeFiles/edit_cache.dir
+C:/Users/austi/projects/truesight_app/android/app/.cxx/Debug/e2i4c3n1/x86/CMakeFiles/rebuild_cache.dir
